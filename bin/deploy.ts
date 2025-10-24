@@ -12,7 +12,7 @@ const env = {
   account: account,
 };
 
-new FunctionsStack(app, `${envName}-auth-functions`, {
+new FunctionsStack(app, `${envName}-functions`, {
   env,
   envName,
 });

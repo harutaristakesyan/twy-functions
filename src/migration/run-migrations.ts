@@ -1,7 +1,7 @@
 // run-migrations.ts
 import path from 'path';
-import {getDb} from "@libs/db";
-import {runMigrations} from "@libs/db/migration";
+import { getDb } from '@libs/db';
+import { runMigrations } from '@libs/db/migration';
 
 (async () => {
   let db;
@@ -18,7 +18,9 @@ import {runMigrations} from "@libs/db/migration";
   } finally {
     try {
       await db?.destroy?.();
-    } catch {}
+    } catch (closeErr) {
+      console.error('⚠️ Failed to close DB connection cleanly:', closeErr);
+    }
     process.exit(process.exitCode ?? 0);
   }
 })();
