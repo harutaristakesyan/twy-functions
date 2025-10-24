@@ -25,6 +25,30 @@ export class FunctionsStack extends Stack {
         requiresAuth: true,
       },
       {
+        functionPath: 'user/self-update',
+        routeKey: 'PATCH /api/user',
+        actions: [dsql],
+        requiresAuth: true,
+      },
+      {
+        functionPath: 'user/list',
+        routeKey: 'GET /api/users',
+        actions: [dsql],
+        requiresAuth: true,
+      },
+      {
+        functionPath: 'user/update',
+        routeKey: 'PATCH /api/users/{userId}',
+        actions: [dsql],
+        requiresAuth: true,
+      },
+      {
+        functionPath: 'user/delete',
+        routeKey: 'DELETE /api/users/{userId}',
+        actions: [dsql],
+        requiresAuth: true,
+      },
+      {
         functionPath: 'branch/list',
         routeKey: 'GET /api/branches',
         actions: [dsql],
