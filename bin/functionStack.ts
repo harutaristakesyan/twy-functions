@@ -24,6 +24,30 @@ export class FunctionsStack extends Stack {
         actions: [dsql],
         requiresAuth: true,
       },
+      {
+        functionPath: 'branch/list',
+        routeKey: 'GET /branches',
+        actions: [dsql],
+        requiresAuth: true,
+      },
+      {
+        functionPath: 'branch/create',
+        routeKey: 'POST /branches',
+        actions: [dsql],
+        requiresAuth: true,
+      },
+      {
+        functionPath: 'branch/update',
+        routeKey: 'PUT /branches/{branchId}',
+        actions: [dsql],
+        requiresAuth: true,
+      },
+      {
+        functionPath: 'branch/delete',
+        routeKey: 'DELETE /branches/{branchId}',
+        actions: [dsql],
+        requiresAuth: true,
+      },
     ];
 
     new HttpLambdaRouter(this, 'FunctionsRouts', { envName, routes });
