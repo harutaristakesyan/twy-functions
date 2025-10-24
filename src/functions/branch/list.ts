@@ -4,8 +4,16 @@ import { listBranches as listBranchRecords } from '@libs/db/operations/branchOpe
 import { BranchListResponse } from '@contracts/branch/response';
 import { ListBranchesEvent, ListBranchesEventSchema } from '@contracts/branch/request';
 
-const listBranches = async (): Promise<BranchListResponse> => {
-  return listBranchRecords();
+const listBranches = async (event: ListBranchesEvent): Promise<BranchListResponse> => {
+  const { page, limit, sortField, sortOrder, query } = event.queryStringParameters;
+
+  return listBranchRecords({
+    page,
+    limit,
+    sortField,
+    sortOrder,
+    query,
+  });
 };
 
 export const handler = middyfy<

@@ -1,13 +1,11 @@
 import { middyfy } from '@libs/lambda';
-import {
-  APIGatewayProxyEventV2WithJWTAuthorizer,
-  APIGatewayProxyResult,
-} from 'aws-lambda';
+import { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
 import { deleteBranch as deleteBranchRecord } from '@libs/db/operations/branchOperations';
 import { DeleteBranchEvent, DeleteBranchEventSchema } from '@contracts/branch/request';
 import createError from 'http-errors';
+import { MessageResponse } from '@contracts/common/response';
 
-const deleteBranch = async (event: DeleteBranchEvent): Promise<APIGatewayProxyResult> => {
+const deleteBranch = async (event: DeleteBranchEvent): Promise<MessageResponse> => {
   const { branchId } = event.pathParameters;
 
   const removed = await deleteBranchRecord(branchId);
@@ -16,16 +14,12 @@ const deleteBranch = async (event: DeleteBranchEvent): Promise<APIGatewayProxyRe
     throw new createError.NotFound('Branch not found');
   }
 
-  return {
-    statusCode: 204,
-    headers: { 'Content-Type': 'application/json' },
-    body: '',
-  };
+  return { message: 'Branch deleted successfully' };
 };
 
 export const handler = middyfy<
   DeleteBranchEvent,
-  APIGatewayProxyResult,
+  MessageResponse,
   APIGatewayProxyEventV2WithJWTAuthorizer
 >(deleteBranch, {
   eventSchema: DeleteBranchEventSchema,

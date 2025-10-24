@@ -6,6 +6,7 @@
     "build": "tsc",
     "synth": "cdk synth",
     "diff": "cdk diff",
+    "migrate": "ts-node -P tsconfig.scripts.json -r tsconfig-paths/register ./src/migration/run-migrations.ts",
     "lint:commit": "commitlint --edit",
     "lint": "eslint . --ext .ts,.js --report-unused-disable-directives",
     "lint:fix": "eslint . --ext .ts,.js --fix",

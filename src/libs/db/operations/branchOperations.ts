@@ -1,7 +1,22 @@
 import { randomUUID } from 'node:crypto';
 import createError from 'http-errors';
-import { Database, getDb } from '@libs/db';
-import { Kysely, Transaction } from 'kysely';
+import {
+  AuditTimeKeys,
+  BranchTable,
+  Database,
+  getDb,
+  NewRow,
+  OrderDirection,
+  PatchRow,
+  Roles,
+} from '@libs/db';
+import { Kysely, Selectable, Transaction } from 'kysely';
+
+export type Branch = Omit<Selectable<BranchTable>, AuditTimeKeys> & {
+  owner: BranchOwnerRecord | null;
+};
+export type NewBranch = NewRow<BranchTable> & { ownerId: string };
+export type UpdateBranch = PatchRow<BranchTable> & { ownerId?: string | null };
 
 export interface BranchOwnerRecord {
   id: string;
@@ -10,18 +25,11 @@ export interface BranchOwnerRecord {
   lastName: string | null;
 }
 
-export interface BranchRecord {
-  id: string;
-  name: string;
-  contact: string | null;
-  owner: BranchOwnerRecord | null;
-}
-
 interface BranchWithOwnerRow {
   id: string;
   name: string;
   contact: string | null;
-  ownerId: string | null;
+  ownerId: string;
   ownerEmail: string | null;
   ownerFirstName: string | null;
   ownerLastName: string | null;
@@ -30,41 +38,33 @@ interface BranchWithOwnerRow {
 type Executor = Kysely<Database> | Transaction<Database>;
 
 const BRANCH_TABLE = 'branch';
-const OWNER_ALIAS = 'users as owner';
+const OWNER_ALIAS = 'users';
 
 const selectBranchWithOwner = (db: Executor) =>
   db
     .selectFrom(BRANCH_TABLE)
-    .leftJoin(OWNER_ALIAS, 'owner.branch', `${BRANCH_TABLE}.id`)
+    .leftJoin(OWNER_ALIAS, 'users.branch', `${BRANCH_TABLE}.id`)
     .select([
       `${BRANCH_TABLE}.id as id`,
       `${BRANCH_TABLE}.name as name`,
       `${BRANCH_TABLE}.contact as contact`,
-      'owner.id as ownerId',
-      'owner.email as ownerEmail',
-      'owner.firstName as ownerFirstName',
-      'owner.lastName as ownerLastName',
+      'users.id as ownerId',
+      'users.email as ownerEmail',
+      'users.firstName as ownerFirstName',
+      'users.lastName as ownerLastName',
     ]);
 
-const mapBranchRow = (row: BranchWithOwnerRow): BranchRecord => ({
+const mapBranchRow = (row: BranchWithOwnerRow): Branch => ({
   id: row.id,
   name: row.name,
   contact: row.contact,
-  owner: row.ownerId
-    ? {
-        id: row.ownerId,
-        email: row.ownerEmail ?? '',
-        firstName: row.ownerFirstName,
-        lastName: row.ownerLastName,
-      }
-    : null,
+  owner: {
+    id: row.ownerId,
+    email: row.ownerEmail ?? '',
+    firstName: row.ownerFirstName,
+    lastName: row.ownerLastName,
+  },
 });
-
-const fetchBranchById = async (db: Executor, branchId: string): Promise<BranchRecord | null> => {
-  const row = await selectBranchWithOwner(db).where(`${BRANCH_TABLE}.id`, '=', branchId).executeTakeFirst();
-
-  return row ? mapBranchRow(row as BranchWithOwnerRow) : null;
-};
 
 const ensureOwnerExists = async (db: Executor, ownerId: string): Promise<void> => {
   const owner = await db
@@ -78,18 +78,25 @@ const ensureOwnerExists = async (db: Executor, ownerId: string): Promise<void> =
   }
 };
 
-const assignOwner = async (db: Executor, branchId: string, ownerId: string | null): Promise<void> => {
+const assignOwner = async (db: Executor, branchId: string, ownerId: string | null) => {
   if (ownerId === null) {
-    await db.updateTable('users').set({ branch: null }).where('branch', '=', branchId).execute();
+    await db
+      .updateTable('users')
+      .set({ branch: null })
+      .where('branch', '=', branchId)
+      .where('role', '=', Roles.Owner)
+      .execute();
     return;
   }
 
   await ensureOwnerExists(db, ownerId);
 
+  // Reset existing owners
   await db
     .updateTable('users')
     .set({ branch: null })
     .where('branch', '=', branchId)
+    .where('role', '=', Roles.Owner)
     .where('id', '!=', ownerId)
     .execute();
 
@@ -97,23 +104,51 @@ const assignOwner = async (db: Executor, branchId: string, ownerId: string | nul
     .updateTable('users')
     .set({ branch: branchId })
     .where('id', '=', ownerId)
+    .where('role', '=', Roles.Owner)
     .execute();
 };
 
-export const listBranches = async (): Promise<BranchRecord[]> => {
+export interface ListBranchesInput {
+  page: number;
+  limit: number;
+  sortField: 'createdAt' | 'name' | 'contact';
+  sortOrder: OrderDirection;
+  query?: string;
+}
+
+export const listBranches = async (input: ListBranchesInput) => {
   const db = await getDb();
-  const rows = await selectBranchWithOwner(db).execute();
+  const page = input.page;
+  const limit = input?.limit;
+  const sortField = input.sortField;
+  const sortOrder = input?.sortOrder;
+  const searchQuery = input?.query;
+
+  let query = selectBranchWithOwner(db);
+
+  // Add search filter if query is provided
+  if (searchQuery) {
+    query = query.where((eb) =>
+      eb.or([
+        eb(`${BRANCH_TABLE}.name`, 'like', `%${searchQuery}%`),
+        eb(`${BRANCH_TABLE}.contact`, 'like', `%${searchQuery}%`),
+      ]),
+    );
+  }
+
+  // Add sorting
+  query = query.orderBy(sortField, sortOrder);
+
+  // Add pagination
+  const offset = page * limit;
+  query = query.limit(limit).offset(offset);
+
+  const rows = await query.execute();
 
   return rows.map((row) => mapBranchRow(row as BranchWithOwnerRow));
 };
 
-interface CreateBranchInput {
-  name: string;
-  ownerId: string;
-  contact?: string | null;
-}
-
-export const createBranch = async (input: CreateBranchInput): Promise<BranchRecord> => {
+export const createBranch = async (input: NewBranch) => {
   const db = await getDb();
 
   return db.transaction().execute(async (trx) => {
@@ -126,32 +161,17 @@ export const createBranch = async (input: CreateBranchInput): Promise<BranchReco
       .values({
         id: branchId,
         name: input.name,
-        contact: input.contact ?? null,
+        contact: input.contact,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       })
       .execute();
 
     await assignOwner(trx, branchId, input.ownerId);
-
-    const branch = await fetchBranchById(trx, branchId);
-
-    if (!branch) {
-      throw new createError.InternalServerError('Failed to create branch');
-    }
-
-    return branch;
   });
 };
 
-interface UpdateBranchInput {
-  name?: string;
-  contact?: string | null;
-  ownerId?: string | null;
-}
-
-export const updateBranch = async (
-  branchId: string,
-  input: UpdateBranchInput,
-): Promise<BranchRecord | null> => {
+export const updateBranch = async (branchId: string, input: UpdateBranch) => {
   const db = await getDb();
 
   return db.transaction().execute(async (trx) => {
@@ -176,14 +196,19 @@ export const updateBranch = async (
     }
 
     if (Object.keys(updatePayload).length > 0) {
-      await trx.updateTable(BRANCH_TABLE).set(updatePayload).where('id', '=', branchId).execute();
+      await trx
+        .updateTable(BRANCH_TABLE)
+        .set({
+          ...updatePayload,
+          updatedAt: new Date(),
+        })
+        .where('id', '=', branchId)
+        .execute();
     }
 
     if (Object.prototype.hasOwnProperty.call(input, 'ownerId')) {
       await assignOwner(trx, branchId, input.ownerId ?? null);
     }
-
-    return fetchBranchById(trx, branchId);
   });
 };
 

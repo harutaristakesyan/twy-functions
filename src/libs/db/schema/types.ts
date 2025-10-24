@@ -25,22 +25,9 @@ export type NewRowExcept<T, Extra extends keyof T = never> = Omit<Insertable<T>,
 // Patch/update type: usually you still don’t want to set audit fields
 export type PatchRow<T> = Omit<Updateable<T>, AuditKeys>;
 
-export type ProfessionType =
-  | 'analyst'
-  | 'investor'
-  | 'financial_advisor'
-  | 'risk_manager'
-  | 'portfolio_manager'
-  | 'developer'
-  | 'data_scientist'
-  | 'quantitative_researcher'
-  | 'compliance_officer'
-  | 'student'
-  | 'other';
-
-export type ExperienceLevelType =
-  | 'beginner'
-  | 'intermediate'
-  | 'advanced'
-  | 'professional'
-  | 'executive';
+export enum Roles {
+  Owner = 'Owner',
+  Accountant = 'Accountant',
+  Agent = 'Agent',
+  Carrier = 'Carrier',
+}

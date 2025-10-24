@@ -1,7 +1,7 @@
 // run-migrations.ts
 import path from 'path';
-import {getDb} from "@libs/db";
-import {runMigrations} from "@libs/db/migration";
+import { getDb } from '@libs/db';
+import { runMigrations } from '@libs/db/migration';
 
 (async () => {
   let db;

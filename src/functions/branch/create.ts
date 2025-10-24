@@ -1,30 +1,24 @@
 import { middyfy } from '@libs/lambda';
-import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from 'aws-lambda';
+import { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
 import { createBranch as createBranchRecord } from '@libs/db/operations/branchOperations';
 import { CreateBranchEvent, CreateBranchEventSchema } from '@contracts/branch/request';
-import { BranchResponse } from '@contracts/branch/response';
+import { MessageResponse } from '@contracts/common/response';
 
-const createBranch = async (event: CreateBranchEvent): Promise<APIGatewayProxyResult> => {
+const createBranch = async (event: CreateBranchEvent): Promise<MessageResponse> => {
   const { name, owner, contact } = event.body;
 
-  const branch = await createBranchRecord({
+  await createBranchRecord({
     name,
     ownerId: owner,
-    contact: contact ?? null,
+    contact: contact,
   });
 
-  const response: BranchResponse = branch;
-
-  return {
-    statusCode: 201,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(response),
-  };
+  return { message: 'Branch created successfully' };
 };
 
 export const handler = middyfy<
   CreateBranchEvent,
-  APIGatewayProxyResult,
+  MessageResponse,
   APIGatewayProxyEventV2WithJWTAuthorizer
 >(createBranch, {
   eventSchema: CreateBranchEventSchema,
