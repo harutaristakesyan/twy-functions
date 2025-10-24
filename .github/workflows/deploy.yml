@@ -1,0 +1,31 @@
+name: Deploy to Dev and Prod
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-all:
+    uses: harutaristakesyan/twy-actions/.github/workflows/deploy-cdk.yml@master
+    with:
+      cdk_args: '--all --require-approval never'
+      run_migrations: true
+      environments: |
+        [
+          {
+            "name": "dev",
+            "account_id": "${{ vars.DEV_ACCOUNT_ID }}",
+            "region": "us-east-1"
+          },
+          {
+            "name": "prod",
+            "account_id": "${{ vars.PROD_ACCOUNT_ID }}",
+            "region": "us-east-1"
+          }
+        ]

@@ -1,0 +1,8 @@
+{
+  "app": "npx ts-node bin/deploy.ts",
+  "context": {
+    "@aws-cdk/aws-lambda:recognizeVersionProps": true,
+    "@aws-cdk/aws-lambda-nodejs:esbuildMinify": true
+  },
+  "requireApproval": "never"
+}
