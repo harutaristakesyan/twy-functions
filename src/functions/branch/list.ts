@@ -7,13 +7,18 @@ import { ListBranchesEvent, ListBranchesEventSchema } from '@contracts/branch/re
 const listBranches = async (event: ListBranchesEvent): Promise<BranchListResponse> => {
   const { page, limit, sortField, sortOrder, query } = event.queryStringParameters;
 
-  return listBranchRecords({
+  const { branches, total } = await listBranchRecords({
     page,
     limit,
     sortField,
     sortOrder,
     query,
   });
+
+  return {
+    branches,
+    total,
+  };
 };
 
 export const handler = middyfy<

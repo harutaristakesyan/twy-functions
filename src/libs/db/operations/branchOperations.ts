@@ -124,14 +124,21 @@ export const listBranches = async (input: ListBranchesInput) => {
   const sortOrder = input?.sortOrder;
   const searchQuery = input?.query;
 
+  let countQuery = db.selectFrom(BRANCH_TABLE).select(db.fn.count<number>('id').as('count'));
   let query = selectBranchWithOwner(db);
 
-  // Add search filter if query is provided
   if (searchQuery) {
-    query = query.where((eb) =>
-      eb.or([
-        eb(`${BRANCH_TABLE}.name`, 'like', `%${searchQuery}%`),
-        eb(`${BRANCH_TABLE}.contact`, 'like', `%${searchQuery}%`),
+    query = query.where((wb) =>
+      wb.or([
+        wb(`${BRANCH_TABLE}.name`, 'like', `%${searchQuery}%`),
+        wb(`${BRANCH_TABLE}.contact`, 'like', `%${searchQuery}%`),
+      ]),
+    );
+
+    countQuery = countQuery.where((wb) =>
+      wb.or([
+        wb(`${BRANCH_TABLE}.name`, 'like', `%${searchQuery}%`),
+        wb(`${BRANCH_TABLE}.contact`, 'like', `%${searchQuery}%`),
       ]),
     );
   }
@@ -143,9 +150,12 @@ export const listBranches = async (input: ListBranchesInput) => {
   const offset = page * limit;
   query = query.limit(limit).offset(offset);
 
-  const rows = await query.execute();
+  const [rows, countResult] = await Promise.all([query.execute(), countQuery.executeTakeFirst()]);
 
-  return rows.map((row) => mapBranchRow(row as BranchWithOwnerRow));
+  return {
+    branches: rows.map((row) => mapBranchRow(row as BranchWithOwnerRow)),
+    total: countResult?.count ?? 0,
+  };
 };
 
 export const createBranch = async (input: NewBranch) => {

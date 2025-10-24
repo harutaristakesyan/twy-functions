@@ -12,4 +12,7 @@ export interface BranchResponse {
   owner: BranchOwnerResponse | null;
 }
 
-export type BranchListResponse = BranchResponse[];
+export interface BranchListResponse {
+  branches: BranchResponse[];
+  total: number;
+}
