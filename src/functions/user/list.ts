@@ -29,4 +29,3 @@ export const handler = middyfy<
   eventSchema: ListUsersEventSchema,
   mode: 'parse',
 });
-

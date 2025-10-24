@@ -266,4 +266,3 @@ export const updateSelfUser = async (
 
   return true;
 };
-

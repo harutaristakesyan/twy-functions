@@ -1,7 +1,12 @@
 import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
-import { dsqlConnectPolicyFor, HttpLambdaRouter, LambdaRouteDefinition } from './cdk';
+import {
+  dsqlConnectPolicyFor,
+  cognitoUserManagementPolicyFor,
+  HttpLambdaRouter,
+  LambdaRouteDefinition,
+} from './cdk';
 
 interface FunctionsStackProps extends StackProps {
   envName: string;
@@ -17,6 +22,10 @@ export class FunctionsStack extends Stack {
 
     const dsql = dsqlConnectPolicyFor(this.region, this.account, dsqlClusterId);
 
+    const userPoolId = StringParameter.valueForStringParameter(this, '/cognito/user-pool-id');
+
+    const cognitoPolicy = cognitoUserManagementPolicyFor(this.region, this.account, userPoolId);
+
     const routes: LambdaRouteDefinition[] = [
       {
         functionPath: 'user/get',
@@ -27,7 +36,10 @@ export class FunctionsStack extends Stack {
       {
         functionPath: 'user/self-update',
         routeKey: 'PATCH /api/user',
-        actions: [dsql],
+        actions: [dsql, cognitoPolicy],
+        env: {
+          USER_POOL_ID: userPoolId,
+        },
         requiresAuth: true,
       },
       {
@@ -39,13 +51,19 @@ export class FunctionsStack extends Stack {
       {
         functionPath: 'user/update',
         routeKey: 'PATCH /api/users/{userId}',
-        actions: [dsql],
+        actions: [dsql, cognitoPolicy],
+        env: {
+          USER_POOL_ID: userPoolId,
+        },
         requiresAuth: true,
       },
       {
         functionPath: 'user/delete',
         routeKey: 'DELETE /api/users/{userId}',
-        actions: [dsql],
+        actions: [dsql, cognitoPolicy],
+        env: {
+          USER_POOL_ID: userPoolId,
+        },
         requiresAuth: true,
       },
       {

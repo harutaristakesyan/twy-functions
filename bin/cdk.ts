@@ -118,3 +118,20 @@ export function dsqlConnectPolicyFor(region: string, account: string, clusterId:
     ],
   });
 }
+
+export function cognitoUserManagementPolicyFor(
+  region: string,
+  account: string,
+  userPoolId: string,
+) {
+  return new aws_iam.PolicyStatement({
+    effect: aws_iam.Effect.ALLOW,
+    actions: [
+      'cognito-idp:AdminUpdateUserAttributes',
+      'cognito-idp:AdminEnableUser',
+      'cognito-idp:AdminDisableUser',
+      'cognito-idp:AdminDeleteUser',
+    ],
+    resources: [`arn:aws:cognito-idp:${region}:${account}:userpool/${userPoolId}`],
+  });
+}
