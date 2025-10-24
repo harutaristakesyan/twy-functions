@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "baseUrl": "src",
+    "paths": {
+      "@contracts/*": ["src/contracts/*"],
+      "@functions/*": ["functions/*"],
+      "@libs/*": ["libs/*"],
+      "@utils/*": ["utils/*"]
+    },
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"]
+}
