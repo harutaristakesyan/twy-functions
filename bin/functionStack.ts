@@ -6,6 +6,7 @@ import {
   cognitoUserManagementPolicyFor,
   HttpLambdaRouter,
   LambdaRouteDefinition,
+  s3ObjectWritePolicyFor,
 } from './cdk';
 
 interface FunctionsStackProps extends StackProps {
@@ -25,6 +26,10 @@ export class FunctionsStack extends Stack {
     const userPoolId = StringParameter.valueForStringParameter(this, '/cognito/user-pool-id');
 
     const cognitoPolicy = cognitoUserManagementPolicyFor(this.region, this.account, userPoolId);
+
+    const filesBucketName = StringParameter.valueForStringParameter(this, '/files/bucket-name');
+
+    const fileStoragePolicy = s3ObjectWritePolicyFor(filesBucketName);
 
     const routes: LambdaRouteDefinition[] = [
       {
@@ -88,6 +93,24 @@ export class FunctionsStack extends Stack {
         functionPath: 'branch/delete',
         routeKey: 'DELETE /api/branches/{branchId}',
         actions: [dsql],
+        requiresAuth: true,
+      },
+      {
+        functionPath: 'file/upload',
+        routeKey: 'POST /api/files',
+        actions: [fileStoragePolicy],
+        env: {
+          FILES_BUCKET_NAME: filesBucketName,
+        },
+        requiresAuth: true,
+      },
+      {
+        functionPath: 'file/delete',
+        routeKey: 'DELETE /api/files/{fileId}',
+        actions: [fileStoragePolicy],
+        env: {
+          FILES_BUCKET_NAME: filesBucketName,
+        },
         requiresAuth: true,
       },
     ];
