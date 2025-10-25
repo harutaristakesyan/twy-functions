@@ -26,6 +26,8 @@ export type NewRowExcept<T, Extra extends keyof T = never> = Omit<Insertable<T>,
 export type PatchRow<T> = Omit<Updateable<T>, AuditKeys>;
 
 export enum Roles {
+  HeadOwner = 'Head Owner',
+  HeadAccountant = 'Head Accountant',
   Owner = 'Owner',
   Accountant = 'Accountant',
   Agent = 'Agent',
