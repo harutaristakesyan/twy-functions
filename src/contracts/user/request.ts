@@ -52,8 +52,15 @@ export type ListUsersEvent = z.infer<typeof ListUsersEventSchema>;
 
 const UpdateUserPayloadSchema = z
   .object({
-    branch: z.string().uuid('branch must be a valid UUID').nullable().optional(),
-    role: z.nativeEnum(Roles).nullable().optional(),
+    branch: z
+      .string()
+      .regex(
+        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+        'userId must be a valid Cognito user identifier',
+      )
+      .nullable()
+      .optional(),
+    role: z.enum(Roles).nullable().optional(),
     isActive: z.boolean().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
@@ -63,7 +70,12 @@ const UpdateUserPayloadSchema = z
 export const UpdateUserEventSchema = z.object({
   requestContext: AuthContext,
   pathParameters: z.object({
-    userId: z.string().uuid('userId must be a valid UUID'),
+    userId: z
+      .string()
+      .regex(
+        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+        'userId must be a valid Cognito user identifier',
+      ),
   }),
   body: UpdateUserPayloadSchema,
 });
@@ -73,7 +85,12 @@ export type UpdateUserEvent = z.infer<typeof UpdateUserEventSchema>;
 export const DeleteUserEventSchema = z.object({
   requestContext: AuthContext,
   pathParameters: z.object({
-    userId: z.string().uuid('userId must be a valid UUID'),
+    userId: z
+      .string()
+      .regex(
+        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+        'userId must be a valid Cognito user identifier',
+      ),
   }),
 });
 
