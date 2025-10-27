@@ -5,7 +5,7 @@ export interface UserResponse {
   role: string | null;
   isActive: boolean;
   branch: UserBranchResponse | null;
-  registeredDate: string | null;
+  createdAt: string | null;
 }
 
 export interface UserBranchResponse {
@@ -21,7 +21,7 @@ export interface UserListItemResponse {
   role: string | null;
   isActive: boolean;
   branch: UserBranchResponse | null;
-  registeredDate: string | null;
+  createdAt: string | null;
 }
 
 export interface UserListResponse {
