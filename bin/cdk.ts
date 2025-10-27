@@ -135,3 +135,11 @@ export function cognitoUserManagementPolicyFor(
     resources: [`arn:aws:cognito-idp:${region}:${account}:userpool/${userPoolId}`],
   });
 }
+
+export function s3ObjectWritePolicyFor(bucketName: string) {
+  return new aws_iam.PolicyStatement({
+    effect: aws_iam.Effect.ALLOW,
+    actions: ['s3:PutObject', 's3:DeleteObject'],
+    resources: [`arn:aws:s3:::${bucketName}/*`],
+  });
+}
