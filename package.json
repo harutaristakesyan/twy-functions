@@ -14,8 +14,10 @@
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.908.0",
+    "@aws-sdk/client-s3": "^3.917.0",
     "@aws-sdk/client-ssm": "^3.913.0",
     "@aws-sdk/dsql-signer": "^3.916.0",
+    "@aws-sdk/s3-request-presigner": "^3.917.0",
     "@middy/core": "^6.4.5",
     "@middy/event-normalizer": "^6.4.5",
     "@middy/http-error-handler": "^6.4.5",

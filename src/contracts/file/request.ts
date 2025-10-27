@@ -5,7 +5,7 @@ const UploadFilePayloadSchema = z.object({
   fileName: z.string().trim().min(1, 'fileName is required'),
   contentType: z.string().trim().min(1, 'contentType is required'),
   size: z
-    .number({ invalid_type_error: 'size must be a number' })
+    .number()
     .int('size must be an integer')
     .positive('size must be greater than zero')
     .max(100 * 1024 * 1024, 'size must be less than or equal to 100MB'),
@@ -26,3 +26,12 @@ export const DeleteFileEventSchema = z.object({
 });
 
 export type DeleteFileEvent = z.infer<typeof DeleteFileEventSchema>;
+
+export const GetDownloadUrlEventSchema = z.object({
+  requestContext: AuthContext,
+  pathParameters: z.object({
+    fileId: z.string().uuid('fileId must be a valid UUID'),
+  }),
+});
+
+export type GetDownloadUrlEvent = z.infer<typeof GetDownloadUrlEventSchema>;

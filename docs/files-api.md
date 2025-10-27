@@ -85,6 +85,46 @@ Persist the returned `fileId` if you need to delete the object later. The
 object is not available until the client successfully uploads the file to the
 returned `uploadUrl`.
 
+## Get Download URL
+
+- **Method**: `GET /files/{fileId}`
+- **Description**: Generate a short-lived, presigned S3 download URL for a previously uploaded file.
+- **Path Parameters**:
+  - `fileId` – UUID returned from the upload response.
+- **Front-end flow**:
+
+1. Call `GET /files/{fileId}` with the fileId of the file you want to download.
+2. Receive a response with the `downloadUrl` and `expiresAt` timestamp.
+3. Download the file directly from S3 using `fetch`, `axios`, or a direct link.
+
+```ts
+const response = await fetch(`/api/files/${fileId}`, {
+  method: 'GET',
+  headers: {
+    Authorization: `Bearer ${jwt}`,
+  },
+});
+
+const downloadContract = await response.json();
+
+// Download the file
+const fileResponse = await fetch(downloadContract.downloadUrl);
+const blob = await fileResponse.blob();
+
+// Save or process the blob as needed
+```
+
+- **Successful Response**: `200 OK`
+
+```json
+{
+  "downloadUrl": "https://my-files-bucket.s3.us-east-1.amazonaws.com/b3f1d5c5-0f3c-4a94-8d6c-9b21349291ce?X-Amz-Algorithm=AWS4-HMAC-SHA256...",
+  "expiresAt": "2025-02-17T15:28:22.123Z"
+}
+```
+
+The download URL expires after **1 hour** (configurable via `DEFAULT_DOWNLOAD_URL_TTL_SECONDS`).
+
 ## Delete File
 
 - **Method**: `DELETE /files/{fileId}`

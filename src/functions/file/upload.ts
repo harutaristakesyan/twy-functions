@@ -7,13 +7,11 @@ import { createUploadUrl } from '@libs/s3';
 const uploadFile = async (event: UploadFileEvent): Promise<UploadFileResponse> => {
   const { fileName, contentType, size } = event.body;
 
-  const result = await createUploadUrl({
+  return await createUploadUrl({
     fileName,
     contentType,
     size,
   });
-
-  return result;
 };
 
 export const handler = middyfy<

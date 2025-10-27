@@ -2,3 +2,4 @@
 export * from './types';
 export * from './branch';
 export * from './load';
+export * from './file';

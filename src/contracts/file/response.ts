@@ -9,3 +9,8 @@ export interface UploadFileResponse {
   readonly contentType: string;
   readonly contentLength: number;
 }
+
+export interface DownloadFileResponse {
+  readonly downloadUrl: string;
+  readonly expiresAt: string;
+}

@@ -32,19 +32,18 @@ export interface LoadTable {
 
   // Pick-up Information
   pickupCityZipcode: string;
-  pickupPhoneNumber: string;
+  pickupPhone: string;
   pickupCarrier: string;
   pickupName: string;
   pickupAddress: string;
 
   // Drop-off Information
   dropoffCityZipcode: string;
-  dropoffPhoneNumber: string;
+  dropoffPhone: string;
   dropoffCarrier: string;
   dropoffName: string;
   dropoffAddress: string;
 
   // Files & Branch
   branchId: string;
-  fileUrls: string | null; // JSON array stored as text for S3 URLs
 }

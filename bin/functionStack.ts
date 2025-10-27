@@ -113,6 +113,15 @@ export class FunctionsStack extends Stack {
         },
         requiresAuth: true,
       },
+      {
+        functionPath: 'file/download',
+        routeKey: 'GET /api/files/{fileId}',
+        actions: [fileStoragePolicy],
+        env: {
+          FILES_BUCKET_NAME: filesBucketName,
+        },
+        requiresAuth: true,
+      },
     ];
 
     new HttpLambdaRouter(this, 'FunctionsRouts', { envName, routes });
