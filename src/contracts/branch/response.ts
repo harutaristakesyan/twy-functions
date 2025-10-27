@@ -10,6 +10,7 @@ export interface BranchResponse {
   name: string;
   contact: string | null;
   owner: BranchOwnerResponse | null;
+  createdAt: string | null;
 }
 
 export interface BranchListResponse {

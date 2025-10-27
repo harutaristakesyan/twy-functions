@@ -14,6 +14,7 @@ import { Kysely, Selectable, Transaction } from 'kysely';
 
 export type Branch = Omit<Selectable<BranchTable>, AuditTimeKeys> & {
   owner: BranchOwnerRecord | null;
+  createdAt: string | null;
 };
 export type NewBranch = NewRow<BranchTable> & { ownerId: string };
 export type UpdateBranch = PatchRow<BranchTable> & { ownerId?: string | null };
@@ -29,6 +30,7 @@ interface BranchWithOwnerRow {
   id: string;
   name: string;
   contact: string | null;
+  createdAt: string | null;
   ownerId: string;
   ownerEmail: string | null;
   ownerFirstName: string | null;
@@ -48,6 +50,7 @@ const selectBranchWithOwner = (db: Executor) =>
       `${BRANCH_TABLE}.id as id`,
       `${BRANCH_TABLE}.name as name`,
       `${BRANCH_TABLE}.contact as contact`,
+      `${BRANCH_TABLE}.createdAt as createdAt`,
       'users.id as ownerId',
       'users.email as ownerEmail',
       'users.firstName as ownerFirstName',
@@ -58,6 +61,7 @@ const mapBranchRow = (row: BranchWithOwnerRow): Branch => ({
   id: row.id,
   name: row.name,
   contact: row.contact,
+  createdAt: row.createdAt,
   owner: {
     id: row.ownerId,
     email: row.ownerEmail ?? '',
