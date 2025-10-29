@@ -28,7 +28,11 @@ const LoadBaseSchema = z.object({
     .nullable()
     .optional(),
   contactName: z.string().trim().min(1, 'Contact Name is required'),
-  carrier: z.string().trim().min(1, 'Carrier is required'),
+  carrier: z
+    .string()
+    .trim()
+    .min(1, 'Carrier must not be empty when provided')
+    .optional(),
   carrierPaymentMethod: z.string().trim().min(1).nullable().optional(),
   carrierRate: z.number().nonnegative('Carrier Rate cannot be negative'),
   chargeServiceFeeToOffice: z.boolean().optional(),

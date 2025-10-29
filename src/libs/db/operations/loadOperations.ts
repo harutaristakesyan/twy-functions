@@ -45,7 +45,7 @@ export interface LoadRecord {
   referenceNumber: string;
   customerRate: number | null;
   contactName: string;
-  carrier: string;
+  carrier: string | null;
   carrierPaymentMethod: string | null;
   carrierRate: number;
   chargeServiceFeeToOffice: boolean;
@@ -71,7 +71,7 @@ export interface CreateLoadInput {
   referenceNumber: string;
   customerRate?: number | null;
   contactName: string;
-  carrier: string;
+  carrier?: string | null;
   carrierPaymentMethod?: string | null;
   carrierRate: number;
   chargeServiceFeeToOffice?: boolean;
@@ -102,7 +102,7 @@ export interface UpdateLoadInput {
   referenceNumber?: string;
   customerRate?: number | null;
   contactName?: string;
-  carrier?: string;
+  carrier?: string | null;
   carrierPaymentMethod?: string | null;
   carrierRate?: number;
   chargeServiceFeeToOffice?: boolean;
@@ -254,7 +254,7 @@ const mapLoadRow = (row: LoadRow, files: LoadFileRecord[]): LoadRecord => ({
   referenceNumber: row.referenceNumber,
   customerRate: row.customerRate ?? null,
   contactName: row.contactName,
-  carrier: row.carrier,
+  carrier: row.carrier ?? null,
   carrierPaymentMethod: row.carrierPaymentMethod ?? null,
   carrierRate: row.carrierRate,
   chargeServiceFeeToOffice: Boolean(row.chargeServiceFeeToOffice),
@@ -382,7 +382,7 @@ export const createLoad = async (input: CreateLoadInput): Promise<string> => {
         referenceNumber: input.referenceNumber,
         customerRate: typeof input.customerRate === 'undefined' ? null : input.customerRate,
         contactName: input.contactName,
-        carrier: input.carrier,
+        carrier: typeof input.carrier === 'undefined' ? null : input.carrier,
         carrierPaymentMethod:
           typeof input.carrierPaymentMethod === 'undefined' ? null : input.carrierPaymentMethod,
         carrierRate: input.carrierRate,
@@ -462,7 +462,7 @@ export const updateLoad = async (loadId: string, input: UpdateLoadInput): Promis
     }
 
     if (typeof input.carrier !== 'undefined') {
-      updatePayload.carrier = input.carrier;
+      updatePayload.carrier = input.carrier ?? null;
     }
 
     if (typeof input.carrierPaymentMethod !== 'undefined') {

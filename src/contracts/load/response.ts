@@ -15,7 +15,7 @@ export interface LoadResponse {
   referenceNumber: string;
   customerRate: number | null;
   contactName: string;
-  carrier: string;
+  carrier: string | null;
   carrierPaymentMethod: string | null;
   carrierRate: number;
   chargeServiceFeeToOffice: boolean;

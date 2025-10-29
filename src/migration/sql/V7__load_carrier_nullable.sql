@@ -1,0 +1,2 @@
+ALTER TABLE load
+    ALTER COLUMN carrier DROP NOT NULL;

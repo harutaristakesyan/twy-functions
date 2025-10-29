@@ -23,7 +23,7 @@ export interface LoadTable {
   contactName: string;
 
   // Carrier Information
-  carrier: string;
+  carrier: StrN;
   carrierPaymentMethod: StrN;
   carrierRate: number;
   chargeServiceFeeToOffice: boolean;
