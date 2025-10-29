@@ -122,6 +122,30 @@ export class FunctionsStack extends Stack {
         },
         requiresAuth: true,
       },
+      {
+        functionPath: 'load/create',
+        routeKey: 'POST /api/loads',
+        actions: [dsql],
+        requiresAuth: true,
+      },
+      {
+        functionPath: 'load/update',
+        routeKey: 'PUT /api/loads/{loadId}',
+        actions: [dsql],
+        requiresAuth: true,
+      },
+      {
+        functionPath: 'load/changeStatus',
+        routeKey: 'PATCH /api/loads/{loadId}/status',
+        actions: [dsql],
+        requiresAuth: true,
+      },
+      {
+        functionPath: 'load/delete',
+        routeKey: 'DELETE /api/loads/{loadId}',
+        actions: [dsql],
+        requiresAuth: true,
+      },
     ];
 
     new HttpLambdaRouter(this, 'FunctionsRouts', { envName, routes });
