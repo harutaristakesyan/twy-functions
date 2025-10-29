@@ -72,6 +72,8 @@ Loads are created with a default status of `Draft`.
   request.
 - `carrier` is optional. Omit it when no carrier has been identified; when you
   do include it, the value must be non-empty text.
+- `pickup.cityZipCode` and `dropoff.cityZipCode` are optional. When you omit
+  them the API stores a `null` value and responses will reflect that.
 - `files` accepts objects that include both an `id` and `fileName`. When the
   referenced file does not exist yet, the API will create a record in the
   `file` table before linking it to the load. Behind the scenes the API writes
@@ -116,7 +118,8 @@ Loads are created with a default status of `Draft`.
 ```
 
 When a carrier has not been captured for a load, the `carrier` property in
-responses appears as `null`.
+responses appears as `null`. The same behavior applies to missing pick-up or
+drop-off city/zip values.
 
 ## Endpoints
 

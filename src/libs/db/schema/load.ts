@@ -41,14 +41,14 @@ export interface LoadTable {
   temperature: StrN;
 
   // Pick-up Information
-  pickupCityZipCode: string;
+  pickupCityZipCode: StrN;
   pickupPhone: string;
   pickupCarrier: string;
   pickupName: string;
   pickupAddress: string;
 
   // Drop-off Information
-  dropoffCityZipCode: string;
+  dropoffCityZipCode: StrN;
   dropoffPhone: string;
   dropoffCarrier: string;
   dropoffName: string;

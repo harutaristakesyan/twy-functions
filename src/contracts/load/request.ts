@@ -12,7 +12,11 @@ const loadStatusEnum = z.enum(
 const uuidField = z.string().uuid('Value must be a valid UUID');
 
 const locationSchema = z.object({
-  cityZipCode: z.string().trim().min(1, 'City / Zipcode is required'),
+  cityZipCode: z
+    .string()
+    .trim()
+    .min(1, 'City / Zipcode is required')
+    .optional(),
   phone: z.string().trim().min(1, 'Phone number is required'),
   carrier: z.string().trim().min(1, 'Carrier is required'),
   name: z.string().trim().min(1, 'Name is required'),

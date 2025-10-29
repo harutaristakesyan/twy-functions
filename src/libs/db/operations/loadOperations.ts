@@ -32,7 +32,7 @@ export interface LoadFileRecord {
 }
 
 export interface LoadLocationRecord {
-  cityZipCode: string;
+  cityZipCode: string | null;
   phone: string;
   carrier: string;
   name: string;
@@ -83,12 +83,12 @@ export interface CreateLoadInput {
   soldAs: string;
   weight: string;
   temperature?: string | null;
-  pickupCityZipCode: string;
+  pickupCityZipCode: string | null;
   pickupPhone: string;
   pickupCarrier: string;
   pickupName: string;
   pickupAddress: string;
-  dropoffCityZipCode: string;
+  dropoffCityZipCode: string | null;
   dropoffPhone: string;
   dropoffCarrier: string;
   dropoffName: string;
@@ -114,12 +114,12 @@ export interface UpdateLoadInput {
   soldAs?: string;
   weight?: string;
   temperature?: string | null;
-  pickupCityZipCode?: string;
+  pickupCityZipCode?: string | null;
   pickupPhone?: string;
   pickupCarrier?: string;
   pickupName?: string;
   pickupAddress?: string;
-  dropoffCityZipCode?: string;
+  dropoffCityZipCode?: string | null;
   dropoffPhone?: string;
   dropoffCarrier?: string;
   dropoffName?: string;
@@ -267,14 +267,14 @@ const mapLoadRow = (row: LoadRow, files: LoadFileRecord[]): LoadRecord => ({
   weight: row.weight,
   temperature: row.temperature ?? null,
   pickup: {
-    cityZipCode: row.pickupCityZipCode,
+    cityZipCode: row.pickupCityZipCode ?? null,
     phone: row.pickupPhone,
     carrier: row.pickupCarrier,
     name: row.pickupName,
     address: row.pickupAddress,
   },
   dropoff: {
-    cityZipCode: row.dropoffCityZipCode,
+    cityZipCode: row.dropoffCityZipCode ?? null,
     phone: row.dropoffPhone,
     carrier: row.dropoffCarrier,
     name: row.dropoffName,
@@ -395,12 +395,12 @@ export const createLoad = async (input: CreateLoadInput): Promise<string> => {
         soldAs: input.soldAs,
         weight: input.weight,
         temperature: typeof input.temperature === 'undefined' ? null : input.temperature,
-        pickupCityZipCode: input.pickupCityZipCode,
+        pickupCityZipCode: input.pickupCityZipCode ?? null,
         pickupPhone: input.pickupPhone,
         pickupCarrier: input.pickupCarrier,
         pickupName: input.pickupName,
         pickupAddress: input.pickupAddress,
-        dropoffCityZipCode: input.dropoffCityZipCode,
+        dropoffCityZipCode: input.dropoffCityZipCode ?? null,
         dropoffPhone: input.dropoffPhone,
         dropoffCarrier: input.dropoffCarrier,
         dropoffName: input.dropoffName,
@@ -510,7 +510,7 @@ export const updateLoad = async (loadId: string, input: UpdateLoadInput): Promis
     }
 
     if (typeof input.pickupCityZipCode !== 'undefined') {
-      updatePayload.pickupCityZipCode = input.pickupCityZipCode;
+      updatePayload.pickupCityZipCode = input.pickupCityZipCode ?? null;
     }
 
     if (typeof input.pickupPhone !== 'undefined') {
@@ -530,7 +530,7 @@ export const updateLoad = async (loadId: string, input: UpdateLoadInput): Promis
     }
 
     if (typeof input.dropoffCityZipCode !== 'undefined') {
-      updatePayload.dropoffCityZipCode = input.dropoffCityZipCode;
+      updatePayload.dropoffCityZipCode = input.dropoffCityZipCode ?? null;
     }
 
     if (typeof input.dropoffPhone !== 'undefined') {

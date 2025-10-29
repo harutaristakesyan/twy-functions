@@ -2,7 +2,7 @@ import { LoadStatus } from '@libs/db';
 import { MessageResponse } from '@contracts/common/response';
 
 export interface LoadLocationResponse {
-  cityZipCode: string;
+  cityZipCode: string | null;
   phone: string;
   carrier: string;
   name: string;
