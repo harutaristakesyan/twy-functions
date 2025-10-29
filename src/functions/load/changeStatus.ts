@@ -10,8 +10,13 @@ const changeLoadStatus = async (
 ): Promise<ChangeLoadStatusResponse> => {
   const { loadId } = event.pathParameters;
   const { status } = event.body;
+  const changedBy = event.requestContext.authUser.userId;
 
-  const updated = await changeLoadStatusRecord(loadId, status);
+  const { updated, statusChangedByEmail } = await changeLoadStatusRecord(
+    loadId,
+    status,
+    changedBy,
+  );
 
   if (!updated) {
     throw new createError.NotFound('Load not found');
@@ -21,6 +26,7 @@ const changeLoadStatus = async (
     message: 'Load status updated successfully',
     loadId,
     status,
+    statusChangedBy: statusChangedByEmail,
   };
 };
 

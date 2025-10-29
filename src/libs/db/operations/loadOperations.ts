@@ -16,6 +16,7 @@ const LOAD_TABLE = 'load';
 const LOAD_FILES_TABLE = 'load_files';
 const FILE_TABLE = 'file';
 const BRANCH_TABLE = 'branch';
+const USER_TABLE = 'users';
 
 const DEFAULT_LOAD_STATUS: LoadStatus = loadStatusValues[0];
 
@@ -23,7 +24,9 @@ type Executor = Kysely<Database> | Transaction<Database>;
 
 type LoadRow = Selectable<LoadTable>;
 
-export type NewLoad = Omit<NewRow<LoadTable>, 'status'> & { files: LoadFileRecord[] | undefined };
+export type NewLoad = Omit<NewRow<LoadTable>, 'status' | 'statusChangedBy'> & {
+  files: LoadFileRecord[] | undefined;
+};
 export type UpdateLoad = PatchRow<LoadTable> & { files?: LoadFileRecord[] | undefined };
 
 export interface LoadFileInput {
@@ -66,6 +69,7 @@ export interface LoadRecord {
   dropoff: LoadLocationRecord;
   branchId: string;
   status: LoadStatus;
+  statusChangedBy: string | null;
   files: LoadFileRecord[];
   createdAt: string | null;
   updatedAt: string | null;
@@ -186,7 +190,11 @@ const fetchFilesForLoads = async (
   return grouped;
 };
 
-const mapLoadRow = (row: LoadRow, files: LoadFileRecord[]): LoadRecord => ({
+const mapLoadRow = (
+  row: LoadRow,
+  files: LoadFileRecord[],
+  statusChangedByEmail: string | null,
+): LoadRecord => ({
   id: row.id,
   customer: row.customer,
   referenceNumber: row.referenceNumber,
@@ -220,10 +228,34 @@ const mapLoadRow = (row: LoadRow, files: LoadFileRecord[]): LoadRecord => ({
   },
   branchId: row.branchId,
   status: row.status,
+  statusChangedBy: statusChangedByEmail,
   files,
   createdAt: row.createdAt ? row.createdAt.toISOString() : null,
   updatedAt: row.updatedAt ? row.updatedAt.toISOString() : null,
 });
+
+const fetchUsersByIds = async (
+  db: Executor,
+  userIds: string[],
+): Promise<Map<string, string>> => {
+  if (userIds.length === 0) {
+    return new Map();
+  }
+
+  const rows = await db
+    .selectFrom(USER_TABLE)
+    .select(['id', 'email'])
+    .where('id', 'in', userIds)
+    .execute();
+
+  const users = new Map<string, string>();
+
+  for (const row of rows) {
+    users.set(row.id, row.email);
+  }
+
+  return users;
+};
 
 export const listLoads = async (input: ListLoadsInput) => {
   const db = await getDb();
@@ -269,12 +301,29 @@ export const listLoads = async (input: ListLoadsInput) => {
   ]);
 
   const loadIds = rows.map((row) => row.id);
-  const filesMap = await fetchFilesForLoads(db, loadIds);
+  const statusChangedByIds = Array.from(
+    new Set(
+      rows
+        .map((row) => row.statusChangedBy)
+        .filter((userId): userId is string => Boolean(userId)),
+    ),
+  );
+
+  const [filesMap, userEmails] = await Promise.all([
+    fetchFilesForLoads(db, loadIds),
+    fetchUsersByIds(db, statusChangedByIds),
+  ]);
 
   const total = Number(countResult?.count ?? 0);
 
   return {
-    loads: rows.map((row) => mapLoadRow(row as LoadRow, filesMap.get(row.id) ?? [])),
+    loads: rows.map((row) =>
+      mapLoadRow(
+        row as LoadRow,
+        filesMap.get(row.id) ?? [],
+        row.statusChangedBy ? userEmails.get(row.statusChangedBy) ?? null : null,
+      ),
+    ),
     total,
   };
 };
@@ -334,6 +383,7 @@ export const createLoad = async (input: NewLoad): Promise<string> => {
         dropoffAddress: input.dropoffAddress,
         branchId: input.branchId,
         status: DEFAULT_LOAD_STATUS,
+        statusChangedBy: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       })
@@ -502,16 +552,34 @@ export const updateLoad = async (loadId: string, input: UpdateLoad): Promise<boo
   });
 };
 
-export const changeLoadStatus = async (loadId: string, status: LoadStatus): Promise<boolean> => {
+export const changeLoadStatus = async (
+  loadId: string,
+  status: LoadStatus,
+  changedBy: string,
+): Promise<{ updated: boolean; statusChangedByEmail: string | null }> => {
   const db = await getDb();
 
-  const result = await db
-    .updateTable(LOAD_TABLE)
-    .set({ status, updatedAt: new Date() })
-    .where('id', '=', loadId)
-    .executeTakeFirst();
+  return db.transaction().execute(async (trx) => {
+    const [result, user] = await Promise.all([
+      trx
+        .updateTable(LOAD_TABLE)
+        .set({ status, statusChangedBy: changedBy, updatedAt: new Date() })
+        .where('id', '=', loadId)
+        .executeTakeFirst(),
+      trx
+        .selectFrom(USER_TABLE)
+        .select(['email'])
+        .where('id', '=', changedBy)
+        .executeTakeFirst(),
+    ]);
 
-  return (result?.numUpdatedRows ?? 0n) > 0n;
+    const updated = (result?.numUpdatedRows ?? 0n) > 0n;
+
+    return {
+      updated,
+      statusChangedByEmail: updated ? user?.email ?? null : null,
+    };
+  });
 };
 
 export const deleteLoad = async (loadId: string): Promise<boolean> => {

@@ -1,12 +1,6 @@
 import { StrN, NumN, Timestamp } from './types.js';
 
-export const loadStatusValues = [
-  'Draft',
-  'Scheduled',
-  'In Transit',
-  'Delivered',
-  'Cancelled',
-] as const;
+export const loadStatusValues = ['Pending', 'Approved', 'Denied'] as const;
 
 export type LoadStatus = (typeof loadStatusValues)[number];
 
@@ -57,6 +51,7 @@ export interface LoadTable {
   // Files & Branch
   branchId: string;
   status: LoadStatus;
+  statusChangedBy: string | null;
 }
 
 export interface LoadFilesTable {

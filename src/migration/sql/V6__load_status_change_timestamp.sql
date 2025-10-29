@@ -1,0 +1,2 @@
+ALTER TABLE load
+    ADD COLUMN IF NOT EXISTS status_changed_at TIMESTAMP NULL;
