@@ -31,7 +31,7 @@ const mapUserDetails = (row: UserRow) => ({
         name: row.branchName,
       }
     : null,
-    createdAt: row.createdAt ? row.createdAt.toISOString() : null,
+  createdAt: row.createdAt ? row.createdAt.toISOString() : null,
 });
 
 const mapUserListItem = (row: UserRow) => ({

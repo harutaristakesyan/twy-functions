@@ -1,5 +1,15 @@
 import { StrN, NumN, Timestamp } from './types.js';
 
+export const loadStatusValues = [
+  'Draft',
+  'Scheduled',
+  'In Transit',
+  'Delivered',
+  'Cancelled',
+] as const;
+
+export type LoadStatus = (typeof loadStatusValues)[number];
+
 export interface LoadTable {
   // Audit fields
   id: string;
@@ -7,43 +17,49 @@ export interface LoadTable {
   updatedAt: Timestamp;
 
   // Customer Information
-  customerId: string;
+  customer: string;
   referenceNumber: string;
   customerRate: NumN;
-  contactName: StrN;
+  contactName: string;
 
   // Carrier Information
   carrier: StrN;
   carrierPaymentMethod: StrN;
-  carrierRate: NumN;
+  carrierRate: number;
   chargeServiceFeeToOffice: boolean;
 
   // Load Details
   loadType: string;
   serviceType: string;
-  serviceGivenAs: StrN;
+  serviceGivenAs: string;
   commodity: string;
 
   // Booking/Selling Information
-  bookedAs: StrN;
-  soldAs: StrN;
-  weight: NumN;
-  temperature: NumN;
+  bookedAs: string;
+  soldAs: string;
+  weight: string;
+  temperature: StrN;
 
   // Pick-up Information
-  pickupCityZipcode: string;
-  pickupPhone: string;
+  pickupCityZipCode: StrN;
+  pickupPhone: StrN;
   pickupCarrier: string;
   pickupName: string;
   pickupAddress: string;
 
   // Drop-off Information
-  dropoffCityZipcode: string;
-  dropoffPhone: string;
+  dropoffCityZipCode: StrN;
+  dropoffPhone: StrN;
   dropoffCarrier: string;
   dropoffName: string;
   dropoffAddress: string;
 
   // Files & Branch
   branchId: string;
+  status: LoadStatus;
+}
+
+export interface LoadFilesTable {
+  loadId: string;
+  fileId: string;
 }
