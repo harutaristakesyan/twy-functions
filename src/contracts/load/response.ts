@@ -31,7 +31,7 @@ export interface LoadResponse {
   dropoff: LoadLocationResponse;
   branchId: string;
   status: LoadStatus;
-  files: string[];
+  files: LoadFileResponse[];
   createdAt: string | null;
   updatedAt: string | null;
 }
@@ -47,4 +47,14 @@ export interface ChangeLoadStatusResponse extends MessageResponse {
 
 export interface LoadDetailsResponse {
   load: LoadResponse;
+}
+
+export interface LoadFileResponse {
+  id: string;
+  fileName: string;
+}
+
+export interface LoadListResponse {
+  loads: LoadResponse[];
+  total: number;
 }

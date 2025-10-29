@@ -29,14 +29,10 @@ const createLoad = async (event: CreateLoadEvent): Promise<CreateLoadResponse> =
     files,
   } = event.body;
 
-  const normalizedFiles: LoadFileInput[] | undefined = files?.map((file) =>
-    typeof file === 'string'
-      ? { id: file }
-      : {
-          id: file.id,
-          fileName: file.fileName,
-        },
-  );
+  const normalizedFiles: LoadFileInput[] | undefined = files?.map((file) => ({
+    id: file.id,
+    fileName: file.fileName,
+  }));
 
   const loadId = await createLoadRecord({
     customerId,

@@ -5,6 +5,7 @@ import {
   LoadStatus,
   LoadTable,
   getDb,
+  OrderDirection,
   loadStatusValues,
 } from '@libs/db';
 import { Kysely, Selectable, Transaction } from 'kysely';
@@ -20,11 +21,14 @@ type Executor = Kysely<Database> | Transaction<Database>;
 
 type LoadRow = Selectable<LoadTable>;
 
-type LoadFilesRow = { fileId: string };
-
 export interface LoadFileInput {
   id: string;
-  fileName?: string;
+  fileName: string;
+}
+
+export interface LoadFileRecord {
+  id: string;
+  fileName: string;
 }
 
 export interface LoadLocationRecord {
@@ -57,7 +61,7 @@ export interface LoadRecord {
   dropoff: LoadLocationRecord;
   branchId: string;
   status: LoadStatus;
-  files: string[];
+  files: LoadFileRecord[];
   createdAt: string | null;
   updatedAt: string | null;
 }
@@ -125,6 +129,14 @@ export interface UpdateLoadInput {
   files?: LoadFileInput[];
 }
 
+export interface ListLoadsInput {
+  page: number;
+  limit: number;
+  sortField: 'referenceNumber' | 'status' | 'createdAt' | 'customerId';
+  sortOrder: OrderDirection;
+  query?: string;
+}
+
 const normalizeLoadFiles = (files: LoadFileInput[]): LoadFileInput[] => {
   const seen = new Map<string, LoadFileInput>();
   const ordered: LoadFileInput[] = [];
@@ -140,8 +152,6 @@ const normalizeLoadFiles = (files: LoadFileInput[]): LoadFileInput[] => {
 
       seen.set(file.id, normalized);
       ordered.push(normalized);
-    } else if (!existing.fileName && file.fileName) {
-      existing.fileName = file.fileName;
     }
   }
 
@@ -180,14 +190,6 @@ const ensureFilesPersisted = async (db: Executor, files: LoadFileInput[]): Promi
   const missing = uniqueFiles.filter((file) => !existingIds.has(file.id));
 
   if (missing.length > 0) {
-    const missingWithoutNames = missing.filter((file) => !file.fileName);
-
-    if (missingWithoutNames.length > 0) {
-      throw new createError.BadRequest(
-        `File name is required for new files: ${missingWithoutNames.map((file) => file.id).join(', ')}`,
-      );
-    }
-
     const now = new Date();
 
     await db
@@ -195,7 +197,7 @@ const ensureFilesPersisted = async (db: Executor, files: LoadFileInput[]): Promi
       .values(
         missing.map((file) => ({
           id: file.id,
-          fileName: file.fileName!,
+          fileName: file.fileName,
           createdAt: now,
           updatedAt: now,
         })),
@@ -206,17 +208,48 @@ const ensureFilesPersisted = async (db: Executor, files: LoadFileInput[]): Promi
   return fileIds;
 };
 
-const fetchLoadFiles = async (db: Executor, loadId: string): Promise<string[]> => {
+interface LoadFileRow {
+  loadId: string;
+  fileId: string;
+  fileName: string;
+}
+
+const fetchFilesForLoads = async (
+  db: Executor,
+  loadIds: string[],
+): Promise<Map<string, LoadFileRecord[]>> => {
+  if (loadIds.length === 0) {
+    return new Map();
+  }
+
   const rows = await db
     .selectFrom(LOAD_FILES_TABLE)
-    .select(['fileId'])
-    .where('loadId', '=', loadId)
+    .innerJoin(FILE_TABLE, `${FILE_TABLE}.id`, `${LOAD_FILES_TABLE}.fileId`)
+    .select([
+      `${LOAD_FILES_TABLE}.loadId as loadId`,
+      `${LOAD_FILES_TABLE}.fileId as fileId`,
+      `${FILE_TABLE}.fileName as fileName`,
+    ])
+    .where(`${LOAD_FILES_TABLE}.loadId`, 'in', loadIds)
     .execute();
 
-  return rows.map((row: LoadFilesRow) => row.fileId);
+  const grouped = new Map<string, LoadFileRecord[]>();
+
+  for (const row of rows as LoadFileRow[]) {
+    const existing = grouped.get(row.loadId) ?? [];
+    existing.push({ id: row.fileId, fileName: row.fileName });
+    grouped.set(row.loadId, existing);
+  }
+
+  return grouped;
 };
 
-const mapLoadRow = (row: LoadRow, files: string[]): LoadRecord => ({
+const fetchLoadFiles = async (db: Executor, loadId: string): Promise<LoadFileRecord[]> => {
+  const result = await fetchFilesForLoads(db, [loadId]);
+  return result.get(loadId) ?? [];
+};
+
+const mapLoadRow = (row: LoadRow, files: LoadFileRecord[]): LoadRecord => ({
   id: row.id,
   customerId: row.customerId,
   referenceNumber: row.referenceNumber,
@@ -254,6 +287,55 @@ const mapLoadRow = (row: LoadRow, files: string[]): LoadRecord => ({
   createdAt: row.createdAt ? row.createdAt.toISOString() : null,
   updatedAt: row.updatedAt ? row.updatedAt.toISOString() : null,
 });
+
+export const listLoads = async (input: ListLoadsInput) => {
+  const db = await getDb();
+  const page = input.page;
+  const limit = input.limit;
+  const sortField = input.sortField;
+  const sortOrder = input.sortOrder;
+  const searchQuery = input.query;
+
+  let dataQuery = db.selectFrom(LOAD_TABLE).selectAll();
+  let countQuery = db.selectFrom(LOAD_TABLE).select(db.fn.count<number>('id').as('count'));
+
+  if (searchQuery) {
+    dataQuery = dataQuery.where((wb) =>
+      wb.or([
+        wb(`${LOAD_TABLE}.referenceNumber`, 'like', `%${searchQuery}%`),
+        wb(`${LOAD_TABLE}.contactName`, 'like', `%${searchQuery}%`),
+        wb(`${LOAD_TABLE}.carrier`, 'like', `%${searchQuery}%`),
+        wb(`${LOAD_TABLE}.commodity`, 'like', `%${searchQuery}%`),
+      ]),
+    );
+
+    countQuery = countQuery.where((wb) =>
+      wb.or([
+        wb(`${LOAD_TABLE}.referenceNumber`, 'like', `%${searchQuery}%`),
+        wb(`${LOAD_TABLE}.contactName`, 'like', `%${searchQuery}%`),
+        wb(`${LOAD_TABLE}.carrier`, 'like', `%${searchQuery}%`),
+        wb(`${LOAD_TABLE}.commodity`, 'like', `%${searchQuery}%`),
+      ]),
+    );
+  }
+
+  dataQuery = dataQuery.orderBy(sortField, sortOrder);
+
+  const offset = page * limit;
+  dataQuery = dataQuery.limit(limit).offset(offset);
+
+  const [rows, countResult] = await Promise.all([dataQuery.execute(), countQuery.executeTakeFirst()]);
+
+  const loadIds = rows.map((row) => row.id);
+  const filesMap = await fetchFilesForLoads(db, loadIds);
+
+  const total = Number(countResult?.count ?? 0);
+
+  return {
+    loads: rows.map((row) => mapLoadRow(row as LoadRow, filesMap.get(row.id) ?? [])),
+    total,
+  };
+};
 
 const replaceLoadFiles = async (db: Executor, loadId: string, fileIds: string[]): Promise<void> => {
   await db.deleteFrom(LOAD_FILES_TABLE).where('loadId', '=', loadId).execute();

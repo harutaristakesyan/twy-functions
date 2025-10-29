@@ -63,18 +63,17 @@ If no status is supplied when creating a load the API defaults it to `Draft`.
   },
   "branchId": "<uuid>",
   "files": [
-    "<existing-file-id>",
+    { "id": "<existing-file-id>", "fileName": "proof-of-delivery.pdf" },
     { "id": "<new-file-id>", "fileName": "bill-of-lading.pdf" }
   ]
 }
 ```
 
-- `files` accepts either plain UUID strings referencing existing files or
-  objects that include both an `id` and `fileName`. When an object is supplied
-  and the referenced file does not exist yet, the API will create a record in
-  the `file` table before linking it to the load. Behind the scenes the API
-  writes to the `load_files` join table so you can attach multiple files to a
-  single load.
+- `files` accepts objects that include both an `id` and `fileName`. When the
+  referenced file does not exist yet, the API will create a record in the
+  `file` table before linking it to the load. Behind the scenes the API writes
+  to the `load_files` join table so you can attach multiple files to a single
+  load.
 - `branchId` must reference an existing Branch record.
 - Optional numeric or text fields may be omitted or set to `null` to clear
   previously stored values.
@@ -104,13 +103,48 @@ If no status is supplied when creating a load the API defaults it to `Draft`.
   "dropoff": { "cityZipCode": "Dallas, TX 75201", "phone": "(555) 010-2000", "carrier": "Carrier B", "name": "Store B", "address": "456 Elm St" },
   "branchId": "<uuid>",
   "status": "Draft",
-  "files": ["<file-id>"],
+  "files": [
+    { "id": "<file-id>", "fileName": "bill-of-lading.pdf" }
+  ],
   "createdAt": "2025-01-22T18:27:11.102Z",
   "updatedAt": "2025-01-22T18:27:11.102Z"
 }
 ```
 
 ## Endpoints
+
+### List Loads
+
+- **Method**: `GET /loads`
+- **Description**: Retrieve a paginated list of load records filtered by an
+  optional free-text search.
+- **Query Parameters**:
+  - `page` – zero-based page index (defaults to `0`).
+  - `limit` – number of records per page (defaults to `10`).
+  - `sortField` – one of `referenceNumber`, `status`, `createdAt`, `customerId`
+    (defaults to `createdAt`).
+  - `sortOrder` – either `ascend` or `descend` (defaults to `descend`).
+  - `query` – optional search string matched against the reference number,
+    contact name, carrier, or commodity.
+- **Successful Response**: `200 OK`
+
+```json
+{
+  "loads": [
+    {
+      "id": "ab4d2a07-0f92-4f97-96c0-9e0fdac50301",
+      "referenceNumber": "REF-1001",
+      "status": "Draft",
+      "files": [
+        { "id": "f3f9f50d-4e92-4c57-b719-2d4f78b4a6d1", "fileName": "bill-of-lading.pdf" }
+      ],
+      "createdAt": "2025-01-22T18:27:11.102Z",
+      "updatedAt": "2025-01-22T18:27:11.102Z"
+    }
+  ],
+  "total": 1
+}
+```
 
 ### Create Load
 

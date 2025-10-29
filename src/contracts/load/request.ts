@@ -46,13 +46,10 @@ const LoadBaseSchema = z.object({
   status: loadStatusEnum.optional(),
   files: z
     .array(
-      z.union([
-        uuidField,
-        z.object({
-          id: uuidField,
-          fileName: z.string().trim().min(1, 'File name is required'),
-        }),
-      ]),
+      z.object({
+        id: uuidField,
+        fileName: z.string().trim().min(1, 'File name is required'),
+      }),
     )
     .optional(),
 });
@@ -63,6 +60,45 @@ export const CreateLoadEventSchema = z.object({
 });
 
 export type CreateLoadEvent = z.infer<typeof CreateLoadEventSchema>;
+
+export const loadSortFieldMap = {
+  referenceNumber: 'referenceNumber',
+  status: 'status',
+  createdAt: 'createdAt',
+  customerId: 'customerId',
+} as const;
+
+export const loadSortOrderMap = {
+  ascend: 'asc',
+  descend: 'desc',
+} as const;
+
+export const ListLoadsEventSchema = z.object({
+  requestContext: AuthContext,
+  queryStringParameters: z.object({
+    page: z
+      .string()
+      .transform((val) => parseInt(val, 10))
+      .default(0)
+      .transform((val) => (isNaN(val) ? 0 : val)),
+    limit: z
+      .string()
+      .transform((val) => parseInt(val, 10))
+      .default(10)
+      .transform((val) => (isNaN(val) ? 10 : val)),
+    sortField: z
+      .enum(Object.keys(loadSortFieldMap) as [keyof typeof loadSortFieldMap])
+      .default('createdAt')
+      .transform((val) => loadSortFieldMap[val as keyof typeof loadSortFieldMap]),
+    sortOrder: z
+      .enum(Object.keys(loadSortOrderMap) as [keyof typeof loadSortOrderMap])
+      .default('descend')
+      .transform((val) => loadSortOrderMap[val as keyof typeof loadSortOrderMap]),
+    query: z.string().optional(),
+  }),
+});
+
+export type ListLoadsEvent = z.infer<typeof ListLoadsEventSchema>;
 
 const UpdateLoadPayloadSchema = LoadBaseSchema.partial()
   .extend({

@@ -16,14 +16,10 @@ const updateLoad = async (event: UpdateLoadEvent): Promise<MessageResponse> => {
   const payload: UpdateLoadInput = { ...rest };
 
   if (typeof files !== 'undefined') {
-    const normalizedFiles: LoadFileInput[] | undefined = files?.map((file) =>
-      typeof file === 'string'
-        ? { id: file }
-        : {
-            id: file.id,
-            fileName: file.fileName,
-          },
-    );
+    const normalizedFiles: LoadFileInput[] | undefined = files?.map((file) => ({
+      id: file.id,
+      fileName: file.fileName,
+    }));
 
     payload.files = normalizedFiles;
   }

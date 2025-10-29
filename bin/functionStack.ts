@@ -129,6 +129,12 @@ export class FunctionsStack extends Stack {
         requiresAuth: true,
       },
       {
+        functionPath: 'load/list',
+        routeKey: 'GET /api/loads',
+        actions: [dsql],
+        requiresAuth: true,
+      },
+      {
         functionPath: 'load/update',
         routeKey: 'PUT /api/loads/{loadId}',
         actions: [dsql],
