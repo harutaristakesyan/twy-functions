@@ -1,6 +1,8 @@
 import { middyfy } from '@libs/lambda';
 import { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
+import createError from 'http-errors';
 import { createLoad as createLoadRecord, LoadFileInput } from '@libs/db/operations/loadOperations';
+import { getFullUserInfoById } from '@libs/db/operations/userOperations';
 import { CreateLoadEvent, CreateLoadEventSchema } from '@contracts/load/request';
 import { CreateLoadResponse } from '@contracts/load/response';
 
@@ -24,10 +26,23 @@ const createLoad = async (event: CreateLoadEvent): Promise<CreateLoadResponse> =
     temperature,
     pickup,
     dropoff,
-    branchId,
     status,
     files,
   } = event.body;
+
+  const {
+    requestContext: {
+      authUser: { userId },
+    },
+  } = event;
+
+  const user = await getFullUserInfoById(userId);
+
+  if (!user.branch?.id) {
+    throw new createError.BadRequest('User is not assigned to a branch');
+  }
+
+  const branchId = user.branch.id;
 
   const normalizedFiles: LoadFileInput[] | undefined = files?.map((file) => ({
     id: file.id,

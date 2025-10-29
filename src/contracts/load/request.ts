@@ -42,7 +42,6 @@ const LoadBaseSchema = z.object({
   temperature: z.string().trim().nullable().optional(),
   pickup: locationSchema,
   dropoff: locationSchema,
-  branchId: uuidField.describe('Branch'),
   status: loadStatusEnum.optional(),
   files: z
     .array(

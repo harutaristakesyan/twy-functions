@@ -61,7 +61,6 @@ If no status is supplied when creating a load the API defaults it to `Draft`.
     "name": "Store B",
     "address": "456 Elm St"
   },
-  "branchId": "<uuid>",
   "files": [
     { "id": "<existing-file-id>", "fileName": "proof-of-delivery.pdf" },
     { "id": "<new-file-id>", "fileName": "bill-of-lading.pdf" }
@@ -74,7 +73,8 @@ If no status is supplied when creating a load the API defaults it to `Draft`.
   `file` table before linking it to the load. Behind the scenes the API writes
   to the `load_files` join table so you can attach multiple files to a single
   load.
-- `branchId` must reference an existing Branch record.
+- The branch is resolved automatically from the authenticated user's branch. If
+  the user is not assigned to a branch the request is rejected.
 - Optional numeric or text fields may be omitted or set to `null` to clear
   previously stored values.
 
@@ -225,8 +225,8 @@ If no status is supplied when creating a load the API defaults it to `Draft`.
 - Always include the JWT bearer token required by the API Gateway authorizer.
 - To attach supporting documents, first upload them with the Files API and
   supply the returned `fileId` values in the `files` array.
-- Branch validation happens server-side; attempting to use a non-existent
-  `branchId` results in a `404 Not Found` error.
+- Branch validation happens server-side; the API looks up the authenticated
+  user's branch and fails the request if none is assigned.
 - Numeric fields (`customerRate`, `carrierRate`) accept decimal numbers. Omit
   them or send `null` to clear stored values.
 - After mutating a load, refresh any cached load lists to reflect the latest
