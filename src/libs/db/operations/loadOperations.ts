@@ -190,11 +190,7 @@ const fetchFilesForLoads = async (
   return grouped;
 };
 
-const mapLoadRow = (
-  row: LoadRow,
-  files: LoadFileRecord[],
-  statusChangedByEmail: string | null,
-): LoadRecord => ({
+const mapLoadRow = (row: LoadRow, files: LoadFileRecord[]): LoadRecord => ({
   id: row.id,
   customer: row.customer,
   referenceNumber: row.referenceNumber,
@@ -228,34 +224,11 @@ const mapLoadRow = (
   },
   branchId: row.branchId,
   status: row.status,
-  statusChangedBy: statusChangedByEmail,
+  statusChangedBy: row.statusChangedBy,
   files,
   createdAt: row.createdAt ? row.createdAt.toISOString() : null,
   updatedAt: row.updatedAt ? row.updatedAt.toISOString() : null,
 });
-
-const fetchUsersByIds = async (
-  db: Executor,
-  userIds: string[],
-): Promise<Map<string, string>> => {
-  if (userIds.length === 0) {
-    return new Map();
-  }
-
-  const rows = await db
-    .selectFrom(USER_TABLE)
-    .select(['id', 'email'])
-    .where('id', 'in', userIds)
-    .execute();
-
-  const users = new Map<string, string>();
-
-  for (const row of rows) {
-    users.set(row.id, row.email);
-  }
-
-  return users;
-};
 
 export const listLoads = async (input: ListLoadsInput) => {
   const db = await getDb();
@@ -301,29 +274,13 @@ export const listLoads = async (input: ListLoadsInput) => {
   ]);
 
   const loadIds = rows.map((row) => row.id);
-  const statusChangedByIds = Array.from(
-    new Set(
-      rows
-        .map((row) => row.statusChangedBy)
-        .filter((userId): userId is string => Boolean(userId)),
-    ),
-  );
 
-  const [filesMap, userEmails] = await Promise.all([
-    fetchFilesForLoads(db, loadIds),
-    fetchUsersByIds(db, statusChangedByIds),
-  ]);
+  const filesMap = await fetchFilesForLoads(db, loadIds);
 
   const total = Number(countResult?.count ?? 0);
 
   return {
-    loads: rows.map((row) =>
-      mapLoadRow(
-        row as LoadRow,
-        filesMap.get(row.id) ?? [],
-        row.statusChangedBy ? userEmails.get(row.statusChangedBy) ?? null : null,
-      ),
-    ),
+    loads: rows.map((row) => mapLoadRow(row, filesMap.get(row.id) ?? [])),
     total,
   };
 };
@@ -566,18 +523,14 @@ export const changeLoadStatus = async (
         .set({ status, statusChangedBy: changedBy, updatedAt: new Date() })
         .where('id', '=', loadId)
         .executeTakeFirst(),
-      trx
-        .selectFrom(USER_TABLE)
-        .select(['email'])
-        .where('id', '=', changedBy)
-        .executeTakeFirst(),
+      trx.selectFrom(USER_TABLE).select(['email']).where('id', '=', changedBy).executeTakeFirst(),
     ]);
 
     const updated = (result?.numUpdatedRows ?? 0n) > 0n;
 
     return {
       updated,
-      statusChangedByEmail: updated ? user?.email ?? null : null,
+      statusChangedByEmail: updated ? (user?.email ?? null) : null,
     };
   });
 };
