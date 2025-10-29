@@ -65,14 +65,12 @@ const createLoad = async (event: CreateLoadEvent): Promise<CreateLoadResponse> =
     soldAs,
     weight,
     temperature,
-    pickupCityZipCode:
-      typeof pickup.cityZipCode === 'undefined' ? null : pickup.cityZipCode,
+    pickupCityZipCode: typeof pickup.cityZipCode === 'undefined' ? null : pickup.cityZipCode,
     pickupPhone: pickup.phone,
     pickupCarrier: pickup.carrier,
     pickupName: pickup.name,
     pickupAddress: pickup.address,
-    dropoffCityZipCode:
-      typeof dropoff.cityZipCode === 'undefined' ? null : dropoff.cityZipCode,
+    dropoffCityZipCode: typeof dropoff.cityZipCode === 'undefined' ? null : dropoff.cityZipCode,
     dropoffPhone: dropoff.phone,
     dropoffCarrier: dropoff.carrier,
     dropoffName: dropoff.name,

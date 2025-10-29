@@ -1,11 +1,7 @@
 import { middyfy } from '@libs/lambda';
 import { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
 import createError from 'http-errors';
-import {
-  updateLoad as updateLoadRecord,
-  UpdateLoadInput,
-  LoadFileInput,
-} from '@libs/db/operations/loadOperations';
+import { updateLoad as updateLoadRecord, UpdateLoad } from '@libs/db/operations/loadOperations';
 import { MessageResponse } from '@contracts/common/response';
 import { UpdateLoadEvent, UpdateLoadEventSchema } from '@contracts/load/request';
 
@@ -13,15 +9,13 @@ const updateLoad = async (event: UpdateLoadEvent): Promise<MessageResponse> => {
   const { loadId } = event.pathParameters;
   const { pickup, dropoff, files, ...rest } = event.body;
 
-  const payload: UpdateLoadInput = { ...rest };
+  const payload: UpdateLoad = { ...rest };
 
   if (typeof files !== 'undefined') {
-    const normalizedFiles: LoadFileInput[] | undefined = files?.map((file) => ({
+    payload.files = files?.map((file) => ({
       id: file.id,
       fileName: file.fileName,
     }));
-
-    payload.files = normalizedFiles;
   }
 
   if (pickup) {

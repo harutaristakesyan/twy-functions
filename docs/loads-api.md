@@ -105,13 +105,23 @@ Loads are created with a default status of `Draft`.
   "soldAs": "Standard",
   "weight": "10000 lbs",
   "temperature": "-5C",
-  "pickup": { "cityZipCode": "Austin, TX 73301", "phone": "(555) 010-1000", "carrier": "Carrier A", "name": "Warehouse A", "address": "123 Main St" },
-  "dropoff": { "cityZipCode": "Dallas, TX 75201", "phone": "(555) 010-2000", "carrier": "Carrier B", "name": "Store B", "address": "456 Elm St" },
+  "pickup": {
+    "cityZipCode": "Austin, TX 73301",
+    "phone": "(555) 010-1000",
+    "carrier": "Carrier A",
+    "name": "Warehouse A",
+    "address": "123 Main St"
+  },
+  "dropoff": {
+    "cityZipCode": "Dallas, TX 75201",
+    "phone": "(555) 010-2000",
+    "carrier": "Carrier B",
+    "name": "Store B",
+    "address": "456 Elm St"
+  },
   "branchId": "<uuid>",
   "status": "Draft",
-  "files": [
-    { "id": "<file-id>", "fileName": "bill-of-lading.pdf" }
-  ],
+  "files": [{ "id": "<file-id>", "fileName": "bill-of-lading.pdf" }],
   "createdAt": "2025-01-22T18:27:11.102Z",
   "updatedAt": "2025-01-22T18:27:11.102Z"
 }
@@ -146,9 +156,7 @@ drop-off city/zip values.
       "customer": "Acme Corp",
       "referenceNumber": "REF-1001",
       "status": "Draft",
-      "files": [
-        { "id": "f3f9f50d-4e92-4c57-b719-2d4f78b4a6d1", "fileName": "bill-of-lading.pdf" }
-      ],
+      "files": [{ "id": "f3f9f50d-4e92-4c57-b719-2d4f78b4a6d1", "fileName": "bill-of-lading.pdf" }],
       "createdAt": "2025-01-22T18:27:11.102Z",
       "updatedAt": "2025-01-22T18:27:11.102Z"
     }
@@ -164,7 +172,7 @@ drop-off city/zip values.
   through the `load_files` table. Passing a file payload with `id` and
   `fileName` automatically registers the file in the Files catalog if it does
   not exist yet.
-- **Request Body**: Use the *Load Payload* shape. Omitting `files` creates the
+- **Request Body**: Use the _Load Payload_ shape. Omitting `files` creates the
   load without attachments.
 - **Successful Response**: `201 Created`
 

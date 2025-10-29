@@ -42,14 +42,14 @@ export interface LoadTable {
 
   // Pick-up Information
   pickupCityZipCode: StrN;
-  pickupPhone: string;
+  pickupPhone: StrN;
   pickupCarrier: string;
   pickupName: string;
   pickupAddress: string;
 
   // Drop-off Information
   dropoffCityZipCode: StrN;
-  dropoffPhone: string;
+  dropoffPhone: StrN;
   dropoffCarrier: string;
   dropoffName: string;
   dropoffAddress: string;

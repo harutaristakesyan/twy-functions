@@ -2,22 +2,16 @@ import { AuthContext } from '@contracts/common/auth';
 import { loadStatusValues } from '@libs/db';
 import z from 'zod';
 
-const loadStatusEnum = z.enum(
-  [...loadStatusValues] as [
-    (typeof loadStatusValues)[number],
-    ...(typeof loadStatusValues)[number][],
-  ],
-);
+const loadStatusEnum = z.enum([...loadStatusValues] as [
+  (typeof loadStatusValues)[number],
+  ...(typeof loadStatusValues)[number][],
+]);
 
 const uuidField = z.string().uuid('Value must be a valid UUID');
 
 const locationSchema = z.object({
-  cityZipCode: z
-    .string()
-    .trim()
-    .min(1, 'City / Zipcode is required')
-    .optional(),
-  phone: z.string().trim().min(1, 'Phone number is required'),
+  cityZipCode: z.string().trim().min(1, 'City / Zipcode is required').optional(),
+  phone: z.string().trim().min(1, 'Phone number is required').optional(),
   carrier: z.string().trim().min(1, 'Carrier is required'),
   name: z.string().trim().min(1, 'Name is required'),
   address: z.string().trim().min(1, 'Address is required'),
@@ -26,20 +20,12 @@ const locationSchema = z.object({
 const LoadBaseSchema = z.object({
   customer: z.string().trim().min(1, 'Customer is required'),
   referenceNumber: z.string().trim().min(1, 'Reference Number is required'),
-  customerRate: z
-    .number()
-    .nonnegative('Customer Rate cannot be negative')
-    .nullable()
-    .optional(),
+  customerRate: z.number().nonnegative('Customer Rate cannot be negative'),
   contactName: z.string().trim().min(1, 'Contact Name is required'),
-  carrier: z
-    .string()
-    .trim()
-    .min(1, 'Carrier must not be empty when provided')
-    .optional(),
+  carrier: z.string().trim().min(1, 'Carrier must not be empty when provided').optional(),
   carrierPaymentMethod: z.string().trim().min(1).nullable().optional(),
   carrierRate: z.number().nonnegative('Carrier Rate cannot be negative'),
-  chargeServiceFeeToOffice: z.boolean().optional(),
+  chargeServiceFeeToOffice: z.boolean().optional().default(false),
   loadType: z.string().trim().min(1, 'Load Type is required'),
   serviceType: z.string().trim().min(1, 'Service Type is required'),
   serviceGivenAs: z.string().trim().min(1, 'Service Given As is required'),
@@ -106,29 +92,12 @@ export const ListLoadsEventSchema = z.object({
 
 export type ListLoadsEvent = z.infer<typeof ListLoadsEventSchema>;
 
-const UpdateLoadPayloadSchema = LoadBaseSchema.partial()
-  .extend({
-    pickup: locationSchema.partial().optional(),
-    dropoff: locationSchema.partial().optional(),
-  })
-  .superRefine((data, ctx) => {
-    const hasAnyField = Object.entries(data).some(([, value]) => typeof value !== 'undefined');
-
-    if (!hasAnyField) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'At least one field is required to update the load',
-        path: [],
-      });
-    }
-  });
-
 export const UpdateLoadEventSchema = z.object({
   requestContext: AuthContext,
   pathParameters: z.object({
     loadId: uuidField,
   }),
-  body: UpdateLoadPayloadSchema,
+  body: LoadBaseSchema,
 });
 
 export type UpdateLoadEvent = z.infer<typeof UpdateLoadEventSchema>;

@@ -2,11 +2,13 @@ import { randomUUID } from 'node:crypto';
 import createError from 'http-errors';
 import {
   Database,
-  LoadStatus,
-  LoadTable,
   getDb,
-  OrderDirection,
+  LoadStatus,
   loadStatusValues,
+  LoadTable,
+  NewRow,
+  OrderDirection,
+  PatchRow,
 } from '@libs/db';
 import { Kysely, Selectable, Transaction } from 'kysely';
 
@@ -21,6 +23,9 @@ type Executor = Kysely<Database> | Transaction<Database>;
 
 type LoadRow = Selectable<LoadTable>;
 
+export type NewLoad = Omit<NewRow<LoadTable>, 'status'> & { files: LoadFileRecord[] | undefined };
+export type UpdateLoad = PatchRow<LoadTable> & { files?: LoadFileRecord[] | undefined };
+
 export interface LoadFileInput {
   id: string;
   fileName: string;
@@ -33,7 +38,7 @@ export interface LoadFileRecord {
 
 export interface LoadLocationRecord {
   cityZipCode: string | null;
-  phone: string;
+  phone: string | null;
   carrier: string;
   name: string;
   address: string;
@@ -64,68 +69,6 @@ export interface LoadRecord {
   files: LoadFileRecord[];
   createdAt: string | null;
   updatedAt: string | null;
-}
-
-export interface CreateLoadInput {
-  customer: string;
-  referenceNumber: string;
-  customerRate?: number | null;
-  contactName: string;
-  carrier?: string | null;
-  carrierPaymentMethod?: string | null;
-  carrierRate: number;
-  chargeServiceFeeToOffice?: boolean;
-  loadType: string;
-  serviceType: string;
-  serviceGivenAs: string;
-  commodity: string;
-  bookedAs: string;
-  soldAs: string;
-  weight: string;
-  temperature?: string | null;
-  pickupCityZipCode: string | null;
-  pickupPhone: string;
-  pickupCarrier: string;
-  pickupName: string;
-  pickupAddress: string;
-  dropoffCityZipCode: string | null;
-  dropoffPhone: string;
-  dropoffCarrier: string;
-  dropoffName: string;
-  dropoffAddress: string;
-  branchId: string;
-  files?: LoadFileInput[];
-}
-
-export interface UpdateLoadInput {
-  customer?: string;
-  referenceNumber?: string;
-  customerRate?: number | null;
-  contactName?: string;
-  carrier?: string | null;
-  carrierPaymentMethod?: string | null;
-  carrierRate?: number;
-  chargeServiceFeeToOffice?: boolean;
-  loadType?: string;
-  serviceType?: string;
-  serviceGivenAs?: string;
-  commodity?: string;
-  bookedAs?: string;
-  soldAs?: string;
-  weight?: string;
-  temperature?: string | null;
-  pickupCityZipCode?: string | null;
-  pickupPhone?: string;
-  pickupCarrier?: string;
-  pickupName?: string;
-  pickupAddress?: string;
-  dropoffCityZipCode?: string | null;
-  dropoffPhone?: string;
-  dropoffCarrier?: string;
-  dropoffName?: string;
-  dropoffAddress?: string;
-  branchId?: string;
-  files?: LoadFileInput[];
 }
 
 export interface ListLoadsInput {
@@ -243,11 +186,6 @@ const fetchFilesForLoads = async (
   return grouped;
 };
 
-const fetchLoadFiles = async (db: Executor, loadId: string): Promise<LoadFileRecord[]> => {
-  const result = await fetchFilesForLoads(db, [loadId]);
-  return result.get(loadId) ?? [];
-};
-
 const mapLoadRow = (row: LoadRow, files: LoadFileRecord[]): LoadRecord => ({
   id: row.id,
   customer: row.customer,
@@ -325,7 +263,10 @@ export const listLoads = async (input: ListLoadsInput) => {
   const offset = page * limit;
   dataQuery = dataQuery.limit(limit).offset(offset);
 
-  const [rows, countResult] = await Promise.all([dataQuery.execute(), countQuery.executeTakeFirst()]);
+  const [rows, countResult] = await Promise.all([
+    dataQuery.execute(),
+    countQuery.executeTakeFirst(),
+  ]);
 
   const loadIds = rows.map((row) => row.id);
   const filesMap = await fetchFilesForLoads(db, loadIds);
@@ -350,21 +291,7 @@ const replaceLoadFiles = async (db: Executor, loadId: string, fileIds: string[])
   await db.insertInto(LOAD_FILES_TABLE).values(values).execute();
 };
 
-export const getLoadById = async (loadId: string): Promise<LoadRecord | null> => {
-  const db = await getDb();
-
-  const load = await db.selectFrom(LOAD_TABLE).selectAll().where('id', '=', loadId).executeTakeFirst();
-
-  if (!load) {
-    return null;
-  }
-
-  const files = await fetchLoadFiles(db, loadId);
-
-  return mapLoadRow(load as LoadRow, files);
-};
-
-export const createLoad = async (input: CreateLoadInput): Promise<string> => {
+export const createLoad = async (input: NewLoad): Promise<string> => {
   const db = await getDb();
 
   return db.transaction().execute(async (trx) => {
@@ -413,14 +340,17 @@ export const createLoad = async (input: CreateLoadInput): Promise<string> => {
       .execute();
 
     if (fileIds.length > 0) {
-      await trx.insertInto(LOAD_FILES_TABLE).values(fileIds.map((fileId) => ({ loadId, fileId }))).execute();
+      await trx
+        .insertInto(LOAD_FILES_TABLE)
+        .values(fileIds.map((fileId) => ({ loadId, fileId })))
+        .execute();
     }
 
     return loadId;
   });
 };
 
-export const updateLoad = async (loadId: string, input: UpdateLoadInput): Promise<boolean> => {
+export const updateLoad = async (loadId: string, input: UpdateLoad): Promise<boolean> => {
   const db = await getDb();
 
   return db.transaction().execute(async (trx) => {

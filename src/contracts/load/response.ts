@@ -3,7 +3,7 @@ import { MessageResponse } from '@contracts/common/response';
 
 export interface LoadLocationResponse {
   cityZipCode: string | null;
-  phone: string;
+  phone: string | null;
   carrier: string;
   name: string;
   address: string;
