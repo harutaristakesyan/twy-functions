@@ -74,6 +74,9 @@ Loads are created with a default status of `Draft`.
   do include it, the value must be non-empty text.
 - `pickup.cityZipCode` and `dropoff.cityZipCode` are optional. When you omit
   them the API stores a `null` value and responses will reflect that.
+- `pickup.carrier`, `pickup.name`, `pickup.address` and `dropoff.carrier`,
+  `dropoff.name`, `dropoff.address` are required fields.
+- `pickup.phone` and `dropoff.phone` are optional fields.
 - `files` accepts objects that include both an `id` and `fileName`. When the
   referenced file does not exist yet, the API will create a record in the
   `file` table before linking it to the load. Behind the scenes the API writes
@@ -193,6 +196,7 @@ drop-off city/zip values.
   the load.
 - **Path Parameters**:
   - `loadId` – identifier returned from the create response.
+- **Request Body**: Any subset of the _Load Payload_ shape. All fields are optional.
 - **Successful Response**: `200 OK`
 
 ```json
