@@ -35,7 +35,8 @@ CREATE TABLE IF NOT EXISTS load
 
     branch_id                    UUID           NOT NULL,
 
-    status                       TEXT           NOT NULL DEFAULT 'Draft',
+    status                       TEXT           NOT NULL DEFAULT 'Pending',
+    status_changed_by            VARCHAR(255)   NULL,
 
     created_at                   TIMESTAMP               DEFAULT NOW(),
     updated_at                   TIMESTAMP               DEFAULT NOW()

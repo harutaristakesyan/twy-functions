@@ -31,6 +31,7 @@ export interface LoadResponse {
   dropoff: LoadLocationResponse;
   branchId: string;
   status: LoadStatus;
+  statusChangedBy: string | null;
   files: LoadFileResponse[];
   createdAt: string | null;
   updatedAt: string | null;
@@ -43,6 +44,7 @@ export interface CreateLoadResponse extends MessageResponse {
 export interface ChangeLoadStatusResponse extends MessageResponse {
   loadId: string;
   status: LoadStatus;
+  statusChangedBy: string | null;
 }
 
 export interface LoadDetailsResponse {

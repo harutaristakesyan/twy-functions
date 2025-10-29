@@ -19,13 +19,11 @@ All Load endpoints live under the `/loads` prefix.
 
 The service recognizes the following workflow states:
 
-- `Draft`
-- `Scheduled`
-- `In Transit`
-- `Delivered`
-- `Cancelled`
+- `Pending`
+- `Approved`
+- `Denied`
 
-Loads are created with a default status of `Draft`.
+Loads are created with a default status of `Pending`.
 
 ### Load Payload
 
@@ -123,7 +121,8 @@ Loads are created with a default status of `Draft`.
     "address": "456 Elm St"
   },
   "branchId": "<uuid>",
-  "status": "Draft",
+  "status": "Pending",
+  "statusChangedBy": "ops.manager@example.com",
   "files": [{ "id": "<file-id>", "fileName": "bill-of-lading.pdf" }],
   "createdAt": "2025-01-22T18:27:11.102Z",
   "updatedAt": "2025-01-22T18:27:11.102Z"
@@ -133,6 +132,10 @@ Loads are created with a default status of `Draft`.
 When a carrier has not been captured for a load, the `carrier` property in
 responses appears as `null`. The same behavior applies to missing pick-up or
 drop-off city/zip values.
+
+The `statusChangedBy` property returns the email address of the user who last
+updated the status. When the system cannot resolve the user record, the field is
+`null`.
 
 ## Endpoints
 
@@ -158,7 +161,8 @@ drop-off city/zip values.
       "id": "ab4d2a07-0f92-4f97-96c0-9e0fdac50301",
       "customer": "Acme Corp",
       "referenceNumber": "REF-1001",
-      "status": "Draft",
+      "status": "Pending",
+      "statusChangedBy": "ops.manager@example.com",
       "files": [{ "id": "f3f9f50d-4e92-4c57-b719-2d4f78b4a6d1", "fileName": "bill-of-lading.pdf" }],
       "createdAt": "2025-01-22T18:27:11.102Z",
       "updatedAt": "2025-01-22T18:27:11.102Z"
@@ -210,12 +214,13 @@ drop-off city/zip values.
 - **Method**: `PATCH /loads/{loadId}/status`
 - **Description**: Update only the workflow status for a load. This endpoint is
   the preferred way to move a load between operational states without touching
-  any other fields.
+  any other fields. Valid statuses are limited to `Pending`, `Approved`, and
+  `Denied`.
 - **Request Body**:
 
 ```json
 {
-  "status": "In Transit"
+  "status": "Approved"
 }
 ```
 
@@ -225,9 +230,13 @@ drop-off city/zip values.
 {
   "message": "Load status updated successfully",
   "loadId": "ab4d2a07-0f92-4f97-96c0-9e0fdac50301",
-  "status": "In Transit"
+  "status": "Approved",
+  "statusChangedBy": "ops.manager@example.com"
 }
 ```
+
+If the authenticated user cannot be matched to a record in the `users` table,
+the response includes `"statusChangedBy": null`.
 
 ### Delete Load
 
@@ -253,4 +262,4 @@ drop-off city/zip values.
 - Numeric fields (`customerRate`, `carrierRate`) accept decimal numbers. Omit
   them or send `null` to clear stored values.
 - After mutating a load, refresh any cached load lists to reflect the latest
-  status and attachments.
+  status, status change actor, and attachments.
