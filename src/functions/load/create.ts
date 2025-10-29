@@ -8,7 +8,7 @@ import { CreateLoadResponse } from '@contracts/load/response';
 
 const createLoad = async (event: CreateLoadEvent): Promise<CreateLoadResponse> => {
   const {
-    customerId,
+    customer,
     referenceNumber,
     customerRate,
     contactName,
@@ -26,7 +26,6 @@ const createLoad = async (event: CreateLoadEvent): Promise<CreateLoadResponse> =
     temperature,
     pickup,
     dropoff,
-    status,
     files,
   } = event.body;
 
@@ -50,7 +49,7 @@ const createLoad = async (event: CreateLoadEvent): Promise<CreateLoadResponse> =
   }));
 
   const loadId = await createLoadRecord({
-    customerId,
+    customer,
     referenceNumber,
     customerRate,
     contactName,
@@ -77,7 +76,6 @@ const createLoad = async (event: CreateLoadEvent): Promise<CreateLoadResponse> =
     dropoffName: dropoff.name,
     dropoffAddress: dropoff.address,
     branchId,
-    status,
     files: normalizedFiles,
   });
 

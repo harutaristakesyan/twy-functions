@@ -11,7 +11,7 @@ export interface LoadLocationResponse {
 
 export interface LoadResponse {
   id: string;
-  customerId: string;
+  customer: string;
   referenceNumber: string;
   customerRate: number | null;
   contactName: string;

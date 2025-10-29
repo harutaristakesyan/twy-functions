@@ -11,7 +11,7 @@ import { UpdateLoadEvent, UpdateLoadEventSchema } from '@contracts/load/request'
 
 const updateLoad = async (event: UpdateLoadEvent): Promise<MessageResponse> => {
   const { loadId } = event.pathParameters;
-  const { pickup, dropoff, files, status: _status, ...rest } = event.body;
+  const { pickup, dropoff, files, ...rest } = event.body;
 
   const payload: UpdateLoadInput = { ...rest };
 

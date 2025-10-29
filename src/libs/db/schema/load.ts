@@ -17,7 +17,7 @@ export interface LoadTable {
   updatedAt: Timestamp;
 
   // Customer Information
-  customerId: string;
+  customer: string;
   referenceNumber: string;
   customerRate: NumN;
   contactName: string;

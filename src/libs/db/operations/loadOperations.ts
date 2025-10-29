@@ -41,7 +41,7 @@ export interface LoadLocationRecord {
 
 export interface LoadRecord {
   id: string;
-  customerId: string;
+  customer: string;
   referenceNumber: string;
   customerRate: number | null;
   contactName: string;
@@ -67,7 +67,7 @@ export interface LoadRecord {
 }
 
 export interface CreateLoadInput {
-  customerId: string;
+  customer: string;
   referenceNumber: string;
   customerRate?: number | null;
   contactName: string;
@@ -94,12 +94,11 @@ export interface CreateLoadInput {
   dropoffName: string;
   dropoffAddress: string;
   branchId: string;
-  status?: LoadStatus;
   files?: LoadFileInput[];
 }
 
 export interface UpdateLoadInput {
-  customerId?: string;
+  customer?: string;
   referenceNumber?: string;
   customerRate?: number | null;
   contactName?: string;
@@ -132,7 +131,7 @@ export interface UpdateLoadInput {
 export interface ListLoadsInput {
   page: number;
   limit: number;
-  sortField: 'referenceNumber' | 'status' | 'createdAt' | 'customerId';
+  sortField: 'referenceNumber' | 'status' | 'createdAt' | 'customer';
   sortOrder: OrderDirection;
   query?: string;
 }
@@ -251,7 +250,7 @@ const fetchLoadFiles = async (db: Executor, loadId: string): Promise<LoadFileRec
 
 const mapLoadRow = (row: LoadRow, files: LoadFileRecord[]): LoadRecord => ({
   id: row.id,
-  customerId: row.customerId,
+  customer: row.customer,
   referenceNumber: row.referenceNumber,
   customerRate: row.customerRate ?? null,
   contactName: row.contactName,
@@ -303,6 +302,7 @@ export const listLoads = async (input: ListLoadsInput) => {
     dataQuery = dataQuery.where((wb) =>
       wb.or([
         wb(`${LOAD_TABLE}.referenceNumber`, 'like', `%${searchQuery}%`),
+        wb(`${LOAD_TABLE}.customer`, 'like', `%${searchQuery}%`),
         wb(`${LOAD_TABLE}.contactName`, 'like', `%${searchQuery}%`),
         wb(`${LOAD_TABLE}.carrier`, 'like', `%${searchQuery}%`),
         wb(`${LOAD_TABLE}.commodity`, 'like', `%${searchQuery}%`),
@@ -312,6 +312,7 @@ export const listLoads = async (input: ListLoadsInput) => {
     countQuery = countQuery.where((wb) =>
       wb.or([
         wb(`${LOAD_TABLE}.referenceNumber`, 'like', `%${searchQuery}%`),
+        wb(`${LOAD_TABLE}.customer`, 'like', `%${searchQuery}%`),
         wb(`${LOAD_TABLE}.contactName`, 'like', `%${searchQuery}%`),
         wb(`${LOAD_TABLE}.carrier`, 'like', `%${searchQuery}%`),
         wb(`${LOAD_TABLE}.commodity`, 'like', `%${searchQuery}%`),
@@ -377,7 +378,7 @@ export const createLoad = async (input: CreateLoadInput): Promise<string> => {
       .insertInto(LOAD_TABLE)
       .values({
         id: loadId,
-        customerId: input.customerId,
+        customer: input.customer,
         referenceNumber: input.referenceNumber,
         customerRate: typeof input.customerRate === 'undefined' ? null : input.customerRate,
         contactName: input.contactName,
@@ -405,7 +406,7 @@ export const createLoad = async (input: CreateLoadInput): Promise<string> => {
         dropoffName: input.dropoffName,
         dropoffAddress: input.dropoffAddress,
         branchId: input.branchId,
-        status: input.status ?? DEFAULT_LOAD_STATUS,
+        status: DEFAULT_LOAD_STATUS,
         createdAt: new Date(),
         updatedAt: new Date(),
       })
@@ -444,8 +445,8 @@ export const updateLoad = async (loadId: string, input: UpdateLoadInput): Promis
 
     const updatePayload: Record<string, unknown> = {};
 
-    if (typeof input.customerId !== 'undefined') {
-      updatePayload.customerId = input.customerId;
+    if (typeof input.customer !== 'undefined') {
+      updatePayload.customer = input.customer;
     }
 
     if (typeof input.referenceNumber !== 'undefined') {

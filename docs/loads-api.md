@@ -25,13 +25,13 @@ The service recognizes the following workflow states:
 - `Delivered`
 - `Cancelled`
 
-If no status is supplied when creating a load the API defaults it to `Draft`.
+Loads are created with a default status of `Draft`.
 
 ### Load Payload
 
 ```json
 {
-  "customerId": "<uuid>",
+  "customer": "<text>",
   "referenceNumber": "<text>",
   "customerRate": 1250.5,
   "contactName": "<contact>",
@@ -68,6 +68,8 @@ If no status is supplied when creating a load the API defaults it to `Draft`.
 }
 ```
 
+- `customer` is a free-form text field captured exactly as provided in the
+  request.
 - `files` accepts objects that include both an `id` and `fileName`. When the
   referenced file does not exist yet, the API will create a record in the
   `file` table before linking it to the load. Behind the scenes the API writes
@@ -83,7 +85,7 @@ If no status is supplied when creating a load the API defaults it to `Draft`.
 ```json
 {
   "id": "<uuid>",
-  "customerId": "<uuid>",
+  "customer": "<text>",
   "referenceNumber": "REF-1001",
   "customerRate": 1250.5,
   "contactName": "Jane Smith",
@@ -121,11 +123,11 @@ If no status is supplied when creating a load the API defaults it to `Draft`.
 - **Query Parameters**:
   - `page` – zero-based page index (defaults to `0`).
   - `limit` – number of records per page (defaults to `10`).
-  - `sortField` – one of `referenceNumber`, `status`, `createdAt`, `customerId`
+  - `sortField` – one of `referenceNumber`, `status`, `createdAt`, `customer`
     (defaults to `createdAt`).
   - `sortOrder` – either `ascend` or `descend` (defaults to `descend`).
   - `query` – optional search string matched against the reference number,
-    contact name, carrier, or commodity.
+    customer, contact name, carrier, or commodity.
 - **Successful Response**: `200 OK`
 
 ```json
@@ -133,6 +135,7 @@ If no status is supplied when creating a load the API defaults it to `Draft`.
   "loads": [
     {
       "id": "ab4d2a07-0f92-4f97-96c0-9e0fdac50301",
+      "customer": "Acme Corp",
       "referenceNumber": "REF-1001",
       "status": "Draft",
       "files": [

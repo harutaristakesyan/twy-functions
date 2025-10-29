@@ -20,7 +20,7 @@ const locationSchema = z.object({
 });
 
 const LoadBaseSchema = z.object({
-  customerId: uuidField.describe('Customer'),
+  customer: z.string().trim().min(1, 'Customer is required'),
   referenceNumber: z.string().trim().min(1, 'Reference Number is required'),
   customerRate: z
     .number()
@@ -42,7 +42,6 @@ const LoadBaseSchema = z.object({
   temperature: z.string().trim().nullable().optional(),
   pickup: locationSchema,
   dropoff: locationSchema,
-  status: loadStatusEnum.optional(),
   files: z
     .array(
       z.object({
@@ -64,7 +63,7 @@ export const loadSortFieldMap = {
   referenceNumber: 'referenceNumber',
   status: 'status',
   createdAt: 'createdAt',
-  customerId: 'customerId',
+  customer: 'customer',
 } as const;
 
 export const loadSortOrderMap = {
