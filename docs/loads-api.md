@@ -244,6 +244,8 @@ the response includes `"statusChangedBy": null`.
 - **Description**: Remove the load and its associated entries from the
   `load_files` join table. The referenced files remain in the Files service so
   they can be re-used elsewhere.
+- **Path Parameters**:
+  - `loadId` – identifier of the load to delete.
 - **Successful Response**: `200 OK`
 
 ```json
