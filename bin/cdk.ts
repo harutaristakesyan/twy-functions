@@ -139,7 +139,7 @@ export function cognitoUserManagementPolicyFor(
 export function s3ObjectWritePolicyFor(bucketName: string) {
   return new aws_iam.PolicyStatement({
     effect: aws_iam.Effect.ALLOW,
-    actions: ['s3:PutObject', 's3:DeleteObject'],
+    actions: ['s3:PutObject', 's3:DeleteObject', 's3:GetObject'],
     resources: [`arn:aws:s3:::${bucketName}/*`],
   });
 }
